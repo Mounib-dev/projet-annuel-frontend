@@ -1,18 +1,55 @@
-import "../../assets/layout/NavBar.css";
 import { Link } from "react-router-dom";
+import { useState } from "react";
+import { Menu, X } from "lucide-react";
+
+import ThemeToggle from "./ThemeToggle";
 
 function NavBar() {
+  const [isOpen, setIsOpen] = useState(false);
+
   return (
     <>
-      <div>
-        <nav>
-          <ul>
-            <li>
-              <Link to="/">Home</Link>
+      <nav className="fixed top-0 left-0 z-50 w-full bg-gradient-to-r from-green-400 to-green-600 p-4 text-white dark:from-gray-900 dark:to-gray-700">
+        <div className="container mx-auto flex items-center justify-between">
+          {/* Logo */}
+          <h1 className="text-2xl font-bold">SmartFunds</h1>
+
+          {/* Hamburger Menu (Mobile) */}
+          <button
+            className="md:hidden"
+            onClick={() => setIsOpen(!isOpen)}
+            aria-label="Toggle Menu"
+          >
+            {isOpen ? <X size={28} /> : <Menu size={28} />}
+          </button>
+
+          {/* Navigation Links (Mobile & Desktop) */}
+          <ul
+            className={`absolute top-16 left-0 w-full md:static md:w-auto ${
+              isOpen
+                ? "bg-gradient-to-r from-green-400 to-green-600 shadow-md dark:from-gray-900 dark:to-gray-700"
+                : "hidden"
+            } p-4 text-lg transition-all duration-300 md:flex md:space-x-6 md:bg-transparent md:p-0`}
+          >
+            <li className="py-2 md:py-0">
+              <Link to="/" className="block hover:underline">
+                Home
+              </Link>
+            </li>
+            <li className="py-2 md:py-0">
+              <Link to="/transaction" className="block hover:underline">
+                Transactions
+              </Link>
+            </li>
+            <li className="py-2 md:py-0">
+              <Link to="/login" className="block hover:underline">
+                Connexion
+              </Link>
             </li>
           </ul>
-        </nav>
-      </div>
+        </div>
+      </nav>
+      <ThemeToggle />
     </>
   );
 }
