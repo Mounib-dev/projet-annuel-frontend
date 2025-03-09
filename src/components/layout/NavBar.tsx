@@ -2,10 +2,16 @@ import { Link } from "react-router-dom";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
 
+import { useAuth } from "../../context/AuthContext";
+
+import { KeyRound, LogOut } from "lucide-react";
+
 import ThemeToggle from "./ThemeToggle";
 
 function NavBar() {
   const [isOpen, setIsOpen] = useState(false);
+
+  const { isLoggedIn, user, logout } = useAuth();
 
   return (
     <>
@@ -31,21 +37,40 @@ function NavBar() {
                 : "hidden"
             } p-4 text-lg transition-all duration-300 md:flex md:space-x-6 md:bg-transparent md:p-0`}
           >
-            <li className="py-2 md:py-0">
-              <Link to="/" className="block hover:underline">
-                Home
-              </Link>
-            </li>
-            <li className="py-2 md:py-0">
-              <Link to="/transaction" className="block hover:underline">
-                Transactions
-              </Link>
-            </li>
-            <li className="py-2 md:py-0">
-              <Link to="/login" className="block hover:underline">
-                Connexion
-              </Link>
-            </li>
+            {isLoggedIn === false ? (
+              <li className="py-2 md:py-0">
+                <Link to="/login" className="block hover:underline">
+                  <KeyRound />
+                </Link>
+              </li>
+            ) : (
+              <>
+                <li className="py-2 md:py-0">
+                  <Link to="/" className="block hover:underline">
+                    Home
+                  </Link>
+                </li>
+                <li className="py-2 md:py-0">
+                  <Link to="/transaction" className="block hover:underline">
+                    Transactions
+                  </Link>
+                </li>
+                <li className="py-2 md:py-0">
+                  <Link to="/ai-assistant" className="block hover:underline">
+                    Assistance
+                  </Link>
+                </li>
+
+                <li className="py-2 md:py-0">
+                  <Link to="/profile" className="block hover:underline">
+                    {user}
+                  </Link>
+                </li>
+                <li className="py-2 md:py-0">
+                  <LogOut className="hover:text-green-500" onClick={logout} />
+                </li>
+              </>
+            )}
           </ul>
         </div>
       </nav>
