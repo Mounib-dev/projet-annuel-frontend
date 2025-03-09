@@ -10,6 +10,8 @@ const Register: React.FC = () => {
     confirmPassword: "",
   });
 
+  const [feedbackMessage, setFeedbackMessage] = useState<string>("");
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
@@ -23,8 +25,9 @@ const Register: React.FC = () => {
     }
     try {
       console.log(formData);
+      const registerEndpoint = "user/register";
       const response = await fetch(
-        "http://localhost:3000/api/v1/user/register",
+        `${import.meta.env.VITE_API_BASE_URL}/${registerEndpoint}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -33,7 +36,9 @@ const Register: React.FC = () => {
       );
 
       if (response.ok) {
-        alert("Inscription réussie !");
+        setFeedbackMessage(
+          "Inscription réussie ! vous pouvez à présent vous connecter",
+        );
         setFormData({
           firstname: "",
           lastname: "",
@@ -59,6 +64,11 @@ const Register: React.FC = () => {
 
         {/* Form */}
         <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
+          {feedbackMessage && (
+            <p className="text-center text-green-500 transition">
+              {feedbackMessage}
+            </p>
+          )}
           {/* First Name */}
           <div>
             <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
@@ -74,7 +84,6 @@ const Register: React.FC = () => {
               className="w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2 text-gray-900 focus:ring-2 focus:ring-green-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             />
           </div>
-
           {/* Last Name */}
           <div>
             <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
@@ -90,7 +99,6 @@ const Register: React.FC = () => {
               className="w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2 text-gray-900 focus:ring-2 focus:ring-green-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             />
           </div>
-
           {/* Email */}
           <div>
             <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
@@ -106,7 +114,6 @@ const Register: React.FC = () => {
               className="w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2 text-gray-900 focus:ring-2 focus:ring-green-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             />
           </div>
-
           {/* Password */}
           <div>
             <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
@@ -122,7 +129,6 @@ const Register: React.FC = () => {
               className="w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2 text-gray-900 focus:ring-2 focus:ring-green-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             />
           </div>
-
           {/* Confirm Password */}
           <div>
             <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
@@ -138,7 +144,6 @@ const Register: React.FC = () => {
               className="w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2 text-gray-900 focus:ring-2 focus:ring-green-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             />
           </div>
-
           {/* Submit Button */}
           <button
             type="submit"
