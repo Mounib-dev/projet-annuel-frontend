@@ -9,11 +9,11 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
     <>
-      <NavBar />
       <div
         className={`flex min-h-screen flex-col bg-gray-100 dark:bg-gray-900`}
       >
-        <main className="flex-1 rounded-md bg-white shadow-md dark:bg-gray-800">
+        <NavBar />
+        <main className="mt-16 flex-1 rounded-md bg-white shadow-md dark:bg-gray-800">
           {children}
         </main>
         <Footer />
