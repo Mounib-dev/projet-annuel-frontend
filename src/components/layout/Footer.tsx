@@ -13,14 +13,21 @@ const Footer: React.FC = () => {
               href="#"
               className="text-sm transition duration-200 hover:text-gray-400"
             >
-              Privacy Policy
+              Yasmine LARBI
             </a>
             <span className="mx-2">|</span>
             <a
               href="#"
               className="text-sm transition duration-200 hover:text-gray-400"
             >
-              Terms of Service
+              Adama GUEYE
+            </a>
+            <span className="mx-2">|</span>
+            <a
+              href="#"
+              className="text-sm transition duration-200 hover:text-gray-400"
+            >
+              Mounib OUROUA
             </a>
           </div>
         </div>
