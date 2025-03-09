@@ -1,11 +1,16 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
-
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 const Login: React.FC = () => {
+  const { login } = useAuth();
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -14,36 +19,30 @@ const Login: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      const response = await fetch("http://localhost:3000/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
+    setLoading(true);
+    setError(null);
 
-      if (response.ok) {
-        const data = await response.json();
-        console.log("Connexion réussie !", data);
-        localStorage.setItem("token", data.token);
-      } else {
-        alert("Erreur lors de la connexion.");
-      }
-    } catch (error) {
-      console.error("Erreur réseau :", error);
+    try {
+      await login(formData);
+      navigate("/transaction");
+    } catch (err) {
+      setError("Email ou mot de passe incorrect.");
+      setLoading(false);
+      console.error(err);
     }
   };
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-r from-green-400 to-green-600 p-4 dark:from-gray-900 dark:to-gray-700">
       <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-lg dark:bg-gray-800">
-        {/* Title */}
         <h2 className="text-center text-2xl font-bold text-gray-800 dark:text-white">
           Connexion à SmartFunds
         </h2>
 
-        {/* Form */}
+        {/* Affichage de l'erreur en cas d'échec */}
+        {error && <p className="text-center text-red-500">{error}</p>}
+
         <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
-          {/* Email Field */}
           <div>
             <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
               Email
@@ -59,7 +58,6 @@ const Login: React.FC = () => {
             />
           </div>
 
-          {/* Password Field */}
           <div>
             <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
               Mot de passe
@@ -75,16 +73,17 @@ const Login: React.FC = () => {
             />
           </div>
 
-          {/* Submit Button */}
           <button
             type="submit"
-            className="w-full rounded-lg bg-green-500 py-2 font-semibold text-white transition duration-300 hover:bg-green-600"
+            disabled={loading}
+            className={`w-full rounded-lg py-2 font-semibold text-white transition duration-300 ${
+              loading ? "bg-gray-500" : "bg-green-500 hover:bg-green-600"
+            }`}
           >
-            Se connecter
+            {loading ? "Connexion en cours..." : "Se connecter"}
           </button>
         </form>
 
-        {/* Sign Up Redirect */}
         <p className="mt-4 text-center text-sm text-gray-700 dark:text-gray-300">
           Pas encore inscrit ?{" "}
           <Link
