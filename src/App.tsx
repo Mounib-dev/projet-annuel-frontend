@@ -12,6 +12,7 @@ import { AuthProvider } from "./context/AuthContext";
 import PrivateRoute from "./components/auth/PrivateRoute";
 
 import ChatBot from "./components/chatbot/ChatBot";
+import FinanceChart from "./components/graph/FinancesChart";
 
 function App() {
   return (
@@ -26,6 +27,10 @@ function App() {
             <Route
               path="/test"
               element={<DialogModal isOpen={false} children={undefined} />}
+            ></Route>
+             <Route
+              path="/graph"
+              element={<FinanceChart/>}
             ></Route>
             <Route path="/ai-assistant" element={<ChatBot />} />
           </Route>

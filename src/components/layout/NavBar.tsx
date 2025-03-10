@@ -56,6 +56,11 @@ function NavBar() {
                   </Link>
                 </li>
                 <li className="py-2 md:py-0">
+                  <Link to="/graph" className="block hover:underline">
+                    Statistiques
+                  </Link>
+                </li>
+                <li className="py-2 md:py-0">
                   <Link to="/ai-assistant" className="block hover:underline">
                     Assistance
                   </Link>
