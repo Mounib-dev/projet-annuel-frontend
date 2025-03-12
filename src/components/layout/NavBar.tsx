@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
 
 import { useAuth } from "../../context/AuthContext";
@@ -7,11 +7,29 @@ import { useAuth } from "../../context/AuthContext";
 import { KeyRound, LogOut } from "lucide-react";
 
 import ThemeToggle from "./ThemeToggle";
+import api from "../../api";
 
 function NavBar() {
   const [isOpen, setIsOpen] = useState(false);
+  const [userBalance, setUserBalance] = useState<number>(0);
 
   const { isLoggedIn, user, logout } = useAuth();
+
+  useEffect(() => {
+    const fetchUserBalance = async () => {
+      const userBalanceEndpoint = "/balance";
+      const response = await api.get(
+        import.meta.env.VITE_API_BASE_URL + userBalanceEndpoint,
+      );
+      console.log(response.data);
+      if (response.status === 200) {
+        setUserBalance(response.data.amount);
+      }
+    };
+    if (isLoggedIn) {
+      fetchUserBalance();
+    }
+  }, [isLoggedIn]);
 
   return (
     <>
@@ -19,6 +37,11 @@ function NavBar() {
         <div className="container mx-auto flex items-center justify-between">
           {/* Logo */}
           <h1 className="text-2xl font-bold">SmartFunds</h1>
+          {isLoggedIn && (
+            <h2 className="rounded-2xl border px-4 py-2 text-xl font-bold text-green-500">
+              {userBalance} €
+            </h2>
+          )}
 
           {/* Hamburger Menu (Mobile) */}
           <button
