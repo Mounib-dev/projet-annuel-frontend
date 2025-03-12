@@ -16,7 +16,12 @@ import {
 } from "recharts";
 import ThemeToggle from "../layout/ThemeToggle";
 
-// Données mensuelles des revenus, dépenses et soldes
+import * as XLSX from "xlsx";
+import jsPDF from "jspdf";
+import "jspdf-autotable";
+import autoTable from "jspdf-autotable";
+
+
 const monthlyData = [
   { month: "Jan", revenue: 4000, expenses: 2400, balance: 1600 },
   { month: "Feb", revenue: 3000, expenses: 1398, balance: 1602 },
@@ -27,7 +32,6 @@ const monthlyData = [
   { month: "Jul", revenue: 6490, expenses: 4300, balance: 2190 },
 ];
 
-// Données annuelles des revenus, dépenses et soldes
 const yearlyData = [
   { month: "2020", revenue: 50000, expenses: 30000, balance: 20000 },
   { month: "2021", revenue: 60000, expenses: 35000, balance: 25000 },
@@ -35,7 +39,6 @@ const yearlyData = [
   { month: "2023", revenue: 80000, expenses: 50000, balance: 30000 },
 ];
 
-// Répartition des dépenses par catégorie
 const categories = [
   { name: "Alimentation", value: 1200 },
   { name: "Transport", value: 800 },
@@ -43,27 +46,39 @@ const categories = [
   { name: "Santé", value: 400 },
 ];
 
-// Couleurs utilisées pour le graphique circulaire
 const COLORS = ["#4CAF50", "#00C49F", "#8BC34A", "#388E3C"];
 
 export default function FinanceChart() {
-  // État pour gérer la période sélectionnée (mois ou année)
   const [selectedPeriod, setSelectedPeriod] = useState("mois");
-
-  // Sélectionne les données à afficher en fonction de la période
   const displayedData = selectedPeriod === "mois" ? monthlyData : yearlyData;
+
+  const downloadExcel = () => {
+    const ws = XLSX.utils.json_to_sheet(displayedData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Statistiques");
+    XLSX.writeFile(wb, "statistiques.xlsx");
+  };
+
+  const downloadPDF = () => {
+    const doc = new jsPDF();
+    doc.text("Statistiques Financières", 20, 10);
+    const tableColumn = ["Mois/Année", "Revenus", "Dépenses", "Solde"];
+    const tableRows = displayedData.map(({ month, revenue, expenses, balance }) => [
+      month,
+      revenue,
+      expenses,
+      balance,
+    ]);
+    autoTable(doc, { head: [tableColumn], body: tableRows });
+    doc.save("statistiques.pdf");
+  };
 
   return (
     <div className="dark:bg-gray-900 dark:text-white p-6 shadow-lg rounded-2xl w-full max-w-5xl mx-auto">
-      {/* Bouton de bascule du mode sombre */}
       <ThemeToggle />
-      
-      {/* Titre principal */}
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-bold">Revenus et Dépenses</h2>
       </div>
-
-      {/* Boutons de sélection de la période */}
       <div className="mb-4 flex space-x-4">
         <button
           className={`px-4 py-2 rounded ${selectedPeriod === "mois" ? "bg-green-600 text-white" : "bg-gray-300 dark:bg-gray-700 dark:text-white"}`}
@@ -78,10 +93,7 @@ export default function FinanceChart() {
           Année
         </button>
       </div>
-
-      {/* Graphiques des revenus et dépenses */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Graphique en barres */}
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={displayedData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#444" />
@@ -93,8 +105,6 @@ export default function FinanceChart() {
             <Bar dataKey="expenses" fill="#F44336" barSize={40} radius={[10, 10, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
-
-        {/* Graphique en ligne balance */}
         <ResponsiveContainer width="100%" height={300}>
           <LineChart data={displayedData}>
             <XAxis dataKey="month" stroke="currentColor" />
@@ -105,8 +115,6 @@ export default function FinanceChart() {
           </LineChart>
         </ResponsiveContainer>
       </div>
-
-      {/* Graphique circulaire de répartition des dépenses */}
       <h3 className="text-lg font-semibold mt-6">Répartition des Dépenses</h3>
       <ResponsiveContainer width="100%" height={250}>
         <PieChart>
@@ -118,6 +126,10 @@ export default function FinanceChart() {
           <Tooltip wrapperStyle={{ backgroundColor: "#333", color: "#fff" }} />
         </PieChart>
       </ResponsiveContainer>
+      <div className="mt-6 flex space-x-4">
+        <button onClick={downloadExcel} className="bg-blue-600 text-white px-4 py-2 rounded">Télécharger Excel</button>
+        <button onClick={downloadPDF} className="bg-red-600 text-white px-4 py-2 rounded">Télécharger PDF</button>
+      </div>
     </div>
   );
 }
