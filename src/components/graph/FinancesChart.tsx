@@ -21,6 +21,7 @@ import jsPDF from "jspdf";
 import "jspdf-autotable";
 import autoTable from "jspdf-autotable";
 
+import { Sheet, FileText } from "lucide-react";
 
 const monthlyData = [
   { month: "Jan", revenue: 4000, expenses: 2400, balance: 1600 },
@@ -63,72 +64,123 @@ export default function FinanceChart() {
     const doc = new jsPDF();
     doc.text("Statistiques Financières", 20, 10);
     const tableColumn = ["Mois/Année", "Revenus", "Dépenses", "Solde"];
-    const tableRows = displayedData.map(({ month, revenue, expenses, balance }) => [
-      month,
-      revenue,
-      expenses,
-      balance,
-    ]);
+    const tableRows = displayedData.map(
+      ({ month, revenue, expenses, balance }) => [
+        month,
+        revenue,
+        expenses,
+        balance,
+      ],
+    );
     autoTable(doc, { head: [tableColumn], body: tableRows });
     doc.save("statistiques.pdf");
   };
 
   return (
-    <div className="dark:bg-gray-900 dark:text-white p-6 shadow-lg rounded-2xl w-full max-w-5xl mx-auto">
+    <div className="mx-auto w-full max-w-5xl rounded-2xl p-6 shadow-lg dark:bg-gray-900 dark:text-white">
       <ThemeToggle />
-      <div className="flex justify-between items-center mb-4">
+      <div className="mb-4 flex items-center justify-between">
         <h2 className="text-xl font-bold">Revenus et Dépenses</h2>
       </div>
       <div className="mb-4 flex space-x-4">
         <button
-          className={`px-4 py-2 rounded ${selectedPeriod === "mois" ? "bg-green-600 text-white" : "bg-gray-300 dark:bg-gray-700 dark:text-white"}`}
+          className={`rounded px-4 py-2 ${selectedPeriod === "mois" ? "bg-green-600 text-white" : "bg-gray-300 dark:bg-gray-700 dark:text-white"}`}
           onClick={() => setSelectedPeriod("mois")}
         >
           Mois
         </button>
         <button
-          className={`px-4 py-2 rounded ${selectedPeriod === "année" ? "bg-green-600 text-white" : "bg-gray-300 dark:bg-gray-700 dark:text-white"}`}
+          className={`rounded px-4 py-2 ${selectedPeriod === "année" ? "bg-green-600 text-white" : "bg-gray-300 dark:bg-gray-700 dark:text-white"}`}
           onClick={() => setSelectedPeriod("année")}
         >
           Année
         </button>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={displayedData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+          <BarChart
+            data={displayedData}
+            margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+          >
             <CartesianGrid strokeDasharray="3 3" stroke="#444" />
             <XAxis dataKey="month" stroke="currentColor" />
             <YAxis stroke="currentColor" />
-            <Tooltip wrapperStyle={{ backgroundColor: "#333", color: "#fff" }} />
+            <Tooltip
+              wrapperStyle={{ backgroundColor: "#333", color: "#fff" }}
+            />
             <Legend />
-            <Bar dataKey="revenue" fill="#4CAF50" barSize={40} radius={[10, 10, 0, 0]} />
-            <Bar dataKey="expenses" fill="#F44336" barSize={40} radius={[10, 10, 0, 0]} />
+            <Bar
+              dataKey="revenue"
+              fill="#4CAF50"
+              barSize={40}
+              radius={[10, 10, 0, 0]}
+            />
+            <Bar
+              dataKey="expenses"
+              fill="#F44336"
+              barSize={40}
+              radius={[10, 10, 0, 0]}
+            />
           </BarChart>
         </ResponsiveContainer>
         <ResponsiveContainer width="100%" height={300}>
           <LineChart data={displayedData}>
             <XAxis dataKey="month" stroke="currentColor" />
             <YAxis stroke="currentColor" />
-            <Tooltip wrapperStyle={{ backgroundColor: "#333", color: "#fff" }} />
+            <Tooltip
+              wrapperStyle={{ backgroundColor: "#333", color: "#fff" }}
+            />
             <Legend />
-            <Line type="monotone" dataKey="balance" stroke="#FFC107" strokeWidth={2} />
+            <Line
+              type="monotone"
+              dataKey="balance"
+              stroke="#FFC107"
+              strokeWidth={2}
+            />
           </LineChart>
         </ResponsiveContainer>
       </div>
-      <h3 className="text-lg font-semibold mt-6">Répartition des Dépenses</h3>
+      <h3 className="mt-6 text-lg font-semibold">Répartition des Dépenses</h3>
       <ResponsiveContainer width="100%" height={250}>
         <PieChart>
-          <Pie data={categories} dataKey="value" nameKey="name" outerRadius={100} label>
+          <Pie
+            data={categories}
+            dataKey="value"
+            nameKey="name"
+            outerRadius={100}
+            label
+          >
             {categories.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+              <Cell
+                key={`cell-${index}`}
+                fill={COLORS[index % COLORS.length]}
+              />
             ))}
           </Pie>
           <Tooltip wrapperStyle={{ backgroundColor: "#333", color: "#fff" }} />
         </PieChart>
       </ResponsiveContainer>
       <div className="mt-6 flex space-x-4">
-        <button onClick={downloadExcel} className="bg-blue-600 text-white px-4 py-2 rounded">Télécharger Excel</button>
-        <button onClick={downloadPDF} className="bg-red-600 text-white px-4 py-2 rounded">Télécharger PDF</button>
+        <button
+          onClick={downloadExcel}
+          className="flex rounded bg-green-500 px-4 py-2 text-white"
+        >
+          <div className="flex">
+            {" "}
+            Télécharger Excel
+            <Sheet className="ml-2" />
+          </div>
+        </button>
+        <button
+          onClick={downloadPDF}
+          className="rounded bg-green-500 px-4 py-2 text-white"
+        >
+          <div className="flex">
+            {" "}
+            Télécharger PDF
+            <FileText className="ml-2" />
+          </div>
+        </button>
       </div>
     </div>
   );
