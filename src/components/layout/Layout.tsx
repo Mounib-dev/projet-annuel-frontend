@@ -22,7 +22,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       const response = await api.get(
         import.meta.env.VITE_API_BASE_URL + balanceEndpoint,
       );
-      console.log(response.data.length);
+      // console.log(response.data.length);
       if (response.status === 200 && response.data.amount) {
         return setHasBalance(false);
       }
