@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import TransactionForm from "./TransactionForm";
 import api from "../../api";
 
+import { useBalance } from "../../context/BalanceContext";
+
 import type { TransactionData } from "./TransactionForm";
 
 const Transaction: React.FC = () => {
@@ -12,8 +14,16 @@ const Transaction: React.FC = () => {
   //   null,
   // );
 
+  const { balance, setBalance } = useBalance();
+
   const handleTransactionSubmit = (transaction: TransactionData) => {
     setTransactions([...transactions, transaction]);
+    if (transaction.transactionType === "expense") {
+      setBalance(balance - +transaction.amount);
+    } else if (transaction.transactionType === "income") {
+      setBalance(balance + +transaction.amount);
+    }
+
     setCurrentPage(1);
   };
 
