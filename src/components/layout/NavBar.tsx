@@ -70,6 +70,11 @@ function NavBar() {
                   </Link>
                 </li>
                 <li className="py-2 md:py-0">
+                  <Link to="/goal" className="block hover:underline">
+                    Goals
+                  </Link>
+                </li>
+                <li className="py-2 md:py-0">
                   <Link to="/ai-assistant" className="block hover:underline">
                     Assistance
                   </Link>
