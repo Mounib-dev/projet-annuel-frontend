@@ -1,12 +1,16 @@
 import axios from "axios";
-import { Pencil, Sparkles, Trash2 } from "lucide-react";
+import { Pencil, Sparkles, Trash2, Lightbulb } from "lucide-react";
 import { useEffect, useState } from "react";
+
+import ConfirmRecommendation from "./ConfirmRecommendation";
+import RecommendationModal from "./RecommendationModal";
 
 export interface Goal {
   _id: string;
   description: string;
   targetAmount: number;
   targetDate: string;
+  recommendation: string;
   recommendationReady: boolean;
 }
 
@@ -99,9 +103,58 @@ export default function GoalsList({
     }
   };
 
+  //Recommendations
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [isRecommendationModalOpen, setIsRecommendationModalOpen] =
+    useState(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [clickedGoal, setClickedGoal] = useState<Goal | null>(null);
+
+  const handleOpenModal = (
+    _event: React.MouseEvent<HTMLButtonElement>,
+    goal: Goal,
+  ): void => {
+    setIsModalOpen(true);
+    // const goal = event.currentTarget.dataset.goal!;
+    console.log(goal);
+    setClickedGoal(goal);
+  };
+
+  const handleCloseModal = (): void => {
+    setIsModalOpen(false);
+    setClickedGoal(null);
+  };
+
+  const handleConfirmRecommendation = async (): Promise<void> => {
+    setIsLoading(true);
+    console.log(clickedGoal);
+    const generateRecommendationEndpoint = `goal/recommandation/${clickedGoal?._id}`;
+    const { description, targetAmount, targetDate } = clickedGoal!;
+
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_BASE_URL}/${generateRecommendationEndpoint}`,
+        { description, targetAmount, targetDate },
+      );
+
+      if (response.status !== 200) {
+        throw new Error(`Erreur HTTP: ${response.status}`);
+      }
+      console.log(response.data);
+    } catch (error) {
+      console.error(
+        "Erreur lors de la génération de la recommandation:",
+        error,
+      );
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">
         {goals.map((goal) => (
           <div
             key={goal._id}
@@ -140,14 +193,34 @@ export default function GoalsList({
             </div>
 
             {/* AI recommendation icon */}
-            <div className="mt-4 flex justify-start">
+            <div className="mt-4 flex justify-start gap-3">
               <button
                 className="flex items-center gap-1 text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
-                title="Générer une recommandation"
+                title="Générer une recommandation par IA"
+                data-goal={goal}
+                onClick={(e) => handleOpenModal(e, goal)}
               >
                 <Sparkles size={20} />
               </button>
+              <button
+                className="flex items-center gap-1 text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+                title="Consulter la recommandation"
+                onClick={() => setIsRecommendationModalOpen(true)}
+              >
+                <Lightbulb size={20} />
+              </button>
+              <RecommendationModal
+                isOpen={isRecommendationModalOpen}
+                onClose={() => setIsRecommendationModalOpen(false)}
+                goal={goal}
+              ></RecommendationModal>
             </div>
+            <ConfirmRecommendation
+              isOpen={isModalOpen}
+              onClose={handleCloseModal}
+              onConfirm={handleConfirmRecommendation}
+              isLoading={isLoading}
+            />
           </div>
         ))}
       </div>
