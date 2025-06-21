@@ -24,7 +24,7 @@ function NavBar() {
           {/* Logo */}
           <h1 className="text-2xl font-bold">SmartFunds</h1>
           {isLoggedIn && (
-            <h2 className="rounded-2xl border px-4 py-2 text-xl font-bold text-green-500">
+            <h2 className="rounded-2xl border px-4 py-2 text-xl font-bold text-white dark:text-green-500">
               {balance} €
             </h2>
           )}
@@ -88,12 +88,14 @@ function NavBar() {
                 <li className="py-2 md:py-0">
                   <LogOut className="hover:text-green-500" onClick={logout} />
                 </li>
+                <li className="py-2 md:py-0">
+                  <ThemeToggle />
+                </li>
               </>
             )}
           </ul>
         </div>
       </nav>
-      <ThemeToggle />
     </>
   );
 }
