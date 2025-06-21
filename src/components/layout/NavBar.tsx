@@ -70,7 +70,7 @@ function NavBar() {
               <>
                 <li className="py-2 md:py-0">
                   <Link to="/" className="block hover:underline">
-                    Home
+                    Dashboard
                   </Link>
                 </li>
                 <li className="py-2 md:py-0">
