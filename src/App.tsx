@@ -14,29 +14,32 @@ import PrivateRoute from "./components/auth/PrivateRoute";
 import ChatBot from "./components/chatbot/ChatBot";
 import FinanceChart from "./components/graph/FinancesChart";
 
+import GoalManager from "./components/goal/GoalManager";
+
+import { BalanceProvider } from "./context/BalanceContext";
 
 function App() {
   return (
     <AuthProvider>
-      <Layout>
-        <Routes>
-          <Route path="/register" element={<Register />} />
-          <Route path="/login" element={<Login />} />
-          <Route element={<PrivateRoute />}>
-            <Route path="/" element={<Dashboard />}></Route>
-            <Route path="/transaction" element={<Transaction />}></Route>
-            <Route
-              path="/test"
-              element={<DialogModal isOpen={false} children={undefined} />}
-            ></Route>
-             <Route
-              path="/graph"
-              element={<FinanceChart/>}
-            ></Route>
-            <Route path="/ai-assistant" element={<ChatBot />} />
-          </Route>
-        </Routes>
-      </Layout>
+      <BalanceProvider>
+        <Layout>
+          <Routes>
+            <Route path="/register" element={<Register />} />
+            <Route path="/login" element={<Login />} />
+            <Route element={<PrivateRoute />}>
+              <Route path="/" element={<Dashboard />}></Route>
+              <Route path="/transaction" element={<Transaction />}></Route>
+              <Route
+                path="/test"
+                element={<DialogModal isOpen={false} children={undefined} />}
+              ></Route>
+              <Route path="/graph" element={<FinanceChart />}></Route>
+              <Route path="/goal" element={<GoalManager />}></Route>
+              <Route path="/ai-assistant" element={<ChatBot />} />
+            </Route>
+          </Routes>
+        </Layout>
+      </BalanceProvider>
     </AuthProvider>
   );
 }
