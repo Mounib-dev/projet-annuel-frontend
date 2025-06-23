@@ -43,6 +43,9 @@ export default function GoalManager() {
       //   setHasGoals(true);
       reset();
       setShowForm(false);
+      setGoals((prevGoals) => {
+        return [...prevGoals, response.data];
+      });
     } catch (error) {
       console.error(error);
       alert("Une erreur est survenue.");
@@ -74,6 +77,19 @@ export default function GoalManager() {
     });
   }, []);
 
+  const handleGoalsDeleted = useCallback((goal: Goal) => {
+    setGoals((prevGoals) => {
+      const exists = prevGoals.find(
+        (deletedGoal) => deletedGoal._id === goal._id,
+      );
+      if (exists) {
+        return prevGoals.filter((deletedGoal) => deletedGoal._id !== goal._id);
+      } else {
+        return [...prevGoals, goal];
+      }
+    });
+  }, []);
+
   return (
     <div className="relative min-h-screen p-4">
       {isLoading ? (
@@ -85,6 +101,7 @@ export default function GoalManager() {
               goals={goals}
               onGoalsFetched={handleGoalsFetched}
               onGoalsUpdated={handleGoalsUpdated}
+              onGoalsDeleted={handleGoalsDeleted}
             />
           </div>
         </div>
@@ -100,6 +117,7 @@ export default function GoalManager() {
             goals={goals}
             onGoalsFetched={handleGoalsFetched}
             onGoalsUpdated={handleGoalsUpdated}
+            onGoalsDeleted={handleGoalsDeleted}
           />
         </div>
       )}
