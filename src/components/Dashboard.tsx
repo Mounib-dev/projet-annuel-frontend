@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import ThemeToggle from "./ThemeToggle";
 import {
   isSameDay,
   isSameMonth,
@@ -23,7 +24,7 @@ import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import api from "../api";
-import BalanceModal from "./balance/BalanceModal";
+
 
 const ITEMS_PER_PAGE = 10;
 
@@ -126,6 +127,9 @@ const Dashboard = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [currentPage, setCurrentPage] = useState(1);
    const alertShown = useRef(false);
+   const [showAlert, setShowAlert] = useState(false);
+const [bigExpenseCount, setBigExpenseCount] = useState(0);
+
 
   useEffect(() => {
     api.get(`${import.meta.env.VITE_API_BASE_URL}/transaction/list`)
@@ -145,29 +149,30 @@ const Dashboard = () => {
   }, []);
 
   const filteredTransactions = filterTransactions(transactions, filter, selectedDate);
-  const { income, expense, totalIncome, totalExpense } = calculateTotals(filteredTransactions);
+  const { income, expense, totalIncome, totalExpense,balance } = calculateTotals(filteredTransactions);
 
-  useEffect(() => {
-    if (!alertShown.current) {
-      const bigExpenses = filteredTransactions.filter(tx => tx.type === "expense" && Number(tx.amount) > 150);
-      if (bigExpenses.length > 0) {
-        alert(` ${bigExpenses.length} dépense(s) dépassent 150 €`);
-        alertShown.current = true;
-      }
-    }
-  }, [filteredTransactions]);
+useEffect(() => {
+  const bigExpenses = filteredTransactions.filter(
+    tx => tx.type === "expense" && Number(tx.amount) > 150
+  );
+  if (bigExpenses.length > 0 && !alertShown.current) {
+    setBigExpenseCount(bigExpenses.length);
+    setShowAlert(true);
+    alertShown.current = true;
+  }
+}, [filteredTransactions]);
 
  
 
   const summaryMessage = filteredTransactions.length === 0
     ? ""
-    : manualBalance! < 0
+    : balance! < 0
     ? "Vous avez dépensé plus que vos revenus. Attention à votre budget."
-    : manualBalance! < totalIncome * 0.2
+    : balance! < totalIncome * 0.2
     ? "Vos dépenses sont proches de vos revenus. Restez vigilant."
     : "Bonne gestion ! Vos revenus couvrent bien vos dépenses.";
 
-  const summaryColor = manualBalance! >= 0 ? "text-green-600" : "text-red-600";
+  const summaryColor = balance! >= 0 ? "text-green-600" : "text-red-600";
 
   const currentLabel = filter === "day"
     ? format(selectedDate, "dd MMM yyyy")
@@ -197,32 +202,51 @@ const Dashboard = () => {
   const pieData = [...expense].sort((a, b) => b.amount - a.amount).slice(0, 5)
     .map(tx => ({ name: tx.description, value: Number(tx.amount) }));
   const COLORS = ["#D32F2F", "#F57C00", "#FBC02D", "#388E3C", "#1976D2"];
+
   return (
-    <div className="bg-gray-50 text-gray-900 min-h-screen overflow-x-hidden p-6">
+    <div className="dark:bg-gray-50 text-gray-900 min-h-screen overflow-x-hidden p-6">
+   
+{showAlert && (
+  <div className="relative mb-6">
+    <div className="bg-red-100 border border-red-400 text-red-600 px-4 py-4 rounded-lg shadow-md flex justify-between items-center animate-slide-down">
+      <div className="flex items-center gap-2">
+        <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4m0 4h.01M4.93 4.93l14.14 14.14M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <span className="text-sm sm:text-base">
+          Attention : {bigExpenseCount} dépense(s) dépassent 150 €.
+        </span>
+      </div>
+      <button onClick={() => setShowAlert(false)} className="ml-4 text-red-700 hover:text-red-900 transition">
+        ✕
+      </button>
+    </div>
+  </div>
+)}
+
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
         <header className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
           <h1 className="text-3xl font-extrabold">Dashboard</h1>
           <div className="flex gap-3">
-            <button onClick={() => exportPDF(paginatedTransactions, { totalIncome, totalExpense, balance: manualBalance! }, currentLabel)} className="bg-green-400 text-white px-5 py-2 rounded-lg">Exporter PDF</button>
-            <button onClick={() => exportExcel(paginatedTransactions, { totalIncome, totalExpense, balance: manualBalance! }, currentLabel)} className="bg-green-400 text-white px-5 py-2 rounded-lg">Exporter Excel</button>
+            <button onClick={() => exportPDF(paginatedTransactions, { totalIncome, totalExpense, balance: manualBalance! }, currentLabel)} className="dark:bg-green-400 dark:text-white px-5 py-2 rounded-lg">Exporter PDF</button>
+            <button onClick={() => exportExcel(paginatedTransactions, { totalIncome, totalExpense, balance: manualBalance! }, currentLabel)} className="dark:bg-green-400 dark:text-white px-5 py-2 rounded-lg">Exporter Excel</button>
           </div>
         </header>
 
-        {/* Horloge */}
-        <p className="text-sm italic text-gray-600 mb-4 text-right">
+        <p className="text-sm italic dark:text-gray-600 mb-4 text-right">
           Heure actuelle : {format(currentTime, "HH:mm:ss")}
         </p>
 
-        {/* Filtres */}
         <section className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
-          <select value={filter} onChange={(e) => setFilter(e.target.value)} className="px-4 py-2 rounded-lg border bg-white">
+          <select value={filter} onChange={(e) => setFilter(e.target.value)} className="px-4 py-2 rounded-lg border dark: bg-white">
             <option value="day">Jour</option>
             <option value="week">Semaine</option>
             <option value="month">Mois</option>
             <option value="year">Année</option>
           </select>
+
           <input type="date" value={format(selectedDate, "yyyy-MM-dd")} onChange={(e) => setSelectedDate(new Date(e.target.value))} className="px-4 py-2 rounded-lg border bg-white" />
+
           {filter === "month" && (
             <select value={selectedDate.getMonth()} onChange={(e) => setSelectedDate(new Date(selectedDate.getFullYear(), Number(e.target.value)))} className="px-4 py-2 rounded-lg border bg-white">
               {Array.from({ length: 12 }, (_, i) => (
@@ -234,10 +258,8 @@ const Dashboard = () => {
           )}
         </section>
 
-        {/* Infos de la période */}
         <h2 className="text-xl font-semibold mb-6 text-center sm:text-left">Période : {currentLabel}</h2>
 
-        {/* Statistiques principales */}
         <section className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
           <div className="bg-green-300 rounded-lg shadow-lg p-6 text-center">
             <span className="block font-bold mb-1">Revenus</span>
@@ -253,14 +275,12 @@ const Dashboard = () => {
           </div>
         </section>
 
-        {/* Résumé */}
         {summaryMessage && (
-          <section className={`mb-8 px-6 py-4 rounded-lg border-2 ${manualBalance! >= 0 ? "border-green-600 bg-green-50" : "border-red-600 bg-red-50"}`}>
+          <section className={`mb-8 px-6 py-4 rounded-lg border-2 ${balance! >= 0 ? "border-green-600 bg-green-50" : "border-red-600 bg-red-50"}`}>
             <p className={`text-center font-semibold text-lg ${summaryColor}`}>{summaryMessage}</p>
           </section>
         )}
 
-        {/* Graphiques */}
         <section className="grid grid-cols-1 md:grid-cols-2 gap-10 mb-12">
           <div>
             <h3 className="text-xl font-semibold mb-4">Évolution Revenus vs Dépenses</h3>
@@ -292,21 +312,11 @@ const Dashboard = () => {
           </div>
         </section>
 
-        {/* Historique des transactions */}
         <section>
-          <h3 className="text-xl font-semibold mb-4">Historique des Transactions</h3>
-
-          {/* ✅ Légende */}
-          <div className="flex items-center gap-4 mb-4">
-            <div className="flex items-center gap-1">
-              <span className="w-4 h-4 rounded-full bg-green-500 inline-block"></span>
-              <span className="text-sm text-green-700 font-medium">Revenus</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <span className="w-4 h-4 rounded-full bg-red-500 inline-block"></span>
-              <span className="text-sm text-red-700 font-medium">Dépenses</span>
-            </div>
-          </div>
+          <h3 className="text-xl font-semibold mb-4 flex items-center justify-between flex-wrap gap-4">
+            Historique des Transactions
+            
+          </h3>
 
           {paginatedTransactions.length === 0 ? (
             <p className="text-center text-gray-500 italic">Aucun historique trouvé.</p>
@@ -314,25 +324,52 @@ const Dashboard = () => {
             <>
               <ul className="divide-y divide-gray-300 rounded-md border border-gray-300 shadow-lg overflow-hidden">
                 {paginatedTransactions.map((tx, idx) => (
-                  <li key={`${tx.id || idx}-${tx.date}`} className={`flex justify-between items-center px-6 py-4 ${tx.type === "expense" ? "bg-red-50 text-red-700" : "bg-green-50 text-green-700"} hover:bg-opacity-80 transition`}>
+                  <li
+                    key={`${tx.id || idx}-${tx.date}`}
+                    className={`flex justify-between items-center px-6 py-4 ${
+                      tx.type === "expense"
+                        ? "bg-red-50 text-red-700"
+                        : "bg-green-50 text-green-700"
+                    } hover:bg-opacity-80 transition`}
+                  >
                     <div className="font-semibold">{tx.description}</div>
                     <div className="text-sm tracking-wide flex gap-3 items-center">
-                      <span className="capitalize">{tx.type}</span>
-                      <span>
-                        {tx.type === "income" ? "+" : "-"}
-                        {Number(tx.amount).toFixed(2)} €
-                      </span>
-                      <span className="text-gray-500">{format(new Date(tx.date), "dd/MM/yyyy")}</span>
+                     <div className="text-sm tracking-wide flex gap-3 items-center">
+  <span>{tx.type === "income" ? "+" : "-"}{Number(tx.amount).toFixed(2)} €</span>
+  <span className="text-gray-500">{format(new Date(tx.date), "dd/MM/yyyy")}</span>
+</div>
+
                     </div>
                   </li>
                 ))}
               </ul>
 
-              {/* Pagination */}
               <div className="flex justify-center items-center gap-3 mt-6">
-                <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className={`px-4 py-2 rounded-lg font-semibold transition ${currentPage === 1 ? "bg-gray-300 text-gray-500 cursor-not-allowed" : "bg-purple-600 text-white"}`}>← Précédent</button>
-                <span className="font-semibold text-gray-700">Page {currentPage} / {totalPages || 1}</span>
-                <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages || totalPages === 0} className={`px-4 py-2 rounded-lg font-semibold transition ${currentPage === totalPages || totalPages === 0 ? "bg-gray-300 text-gray-500 cursor-not-allowed" : "bg-purple-600 text-white"}`}>Suivant →</button>
+                <button
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className={`px-4 py-2 rounded-lg font-semibold transition ${
+                    currentPage === 1
+                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                      : "bg-purple-600 text-white"
+                  }`}
+                >
+                  ← Précédent
+                </button>
+                <span className="font-semibold text-gray-700">
+                  Page {currentPage} / {totalPages || 1}
+                </span>
+                <button
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages || totalPages === 0}
+                  className={`px-4 py-2 rounded-lg font-semibold transition ${
+                    currentPage === totalPages || totalPages === 0
+                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                      : "bg-purple-600 text-white"
+                  }`}
+                >
+                  Suivant →
+                </button>
               </div>
             </>
           )}
