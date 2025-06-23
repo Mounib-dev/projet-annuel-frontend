@@ -18,12 +18,14 @@ interface GoalsListProps {
   goals: Goal[];
   onGoalsFetched: (goals: Goal[]) => void;
   onGoalsUpdated: (goals: Goal) => void;
+  onGoalsDeleted: (goals: Goal) => void;
 }
 
 export default function GoalsList({
   goals,
   onGoalsFetched,
   onGoalsUpdated,
+  onGoalsDeleted,
 }: GoalsListProps) {
   // Fetching Goals
   useEffect(() => {
@@ -94,13 +96,14 @@ export default function GoalsList({
   // Delete
   const handleDelete = async () => {
     if (!selectedGoal) return;
-    const res = await fetch(`/api/goals/${selectedGoal._id}`, {
-      method: "DELETE",
-    });
-    if (res.ok) {
-      setSelectedGoal(null);
-      // refreshGoals();
-    }
+    const deleteGoalEndpoint = `goal/${selectedGoal._id}`;
+    const response = await axios.delete(
+      `${import.meta.env.VITE_API_BASE_URL}/${deleteGoalEndpoint}`,
+    );
+    if (response.status !== 204)
+      throw new Error("Erreur lors de la suppression de l'objectif.");
+    onGoalsDeleted(selectedGoal);
+    setSelectedGoal(null);
   };
 
   //Recommendations
