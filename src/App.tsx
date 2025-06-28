@@ -17,6 +17,7 @@ import FinanceChart from "./components/graph/FinancesChart";
 import GoalManager from "./components/goal/GoalManager";
 
 import { BalanceProvider } from "./context/BalanceContext";
+import Profile from "./components/auth/Profile";
 
 function App() {
   return (
@@ -29,6 +30,7 @@ function App() {
             <Route element={<PrivateRoute />}>
               <Route path="/" element={<Dashboard />}></Route>
               <Route path="/transaction" element={<Transaction />}></Route>
+              <Route path="/profile" element={<Profile />} />
               <Route
                 path="/test"
                 element={<DialogModal isOpen={false} children={undefined} />}
