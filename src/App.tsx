@@ -6,13 +6,10 @@ import Login from "./components/auth/Login";
 
 import Transaction from "./components/transaction/Transaction";
 
-import DialogModal from "./components/utils/DialogModal";
-
 import { AuthProvider } from "./context/AuthContext";
 import PrivateRoute from "./components/auth/PrivateRoute";
 
 import ChatBot from "./components/chatbot/ChatBot";
-import FinanceChart from "./components/graph/FinancesChart";
 
 import GoalManager from "./components/goal/GoalManager";
 
@@ -31,11 +28,6 @@ function App() {
               <Route path="/" element={<Dashboard />}></Route>
               <Route path="/transaction" element={<Transaction />}></Route>
               <Route path="/profile" element={<Profile />} />
-              <Route
-                path="/test"
-                element={<DialogModal isOpen={false} children={undefined} />}
-              ></Route>
-              <Route path="/graph" element={<FinanceChart />}></Route>
               <Route path="/goal" element={<GoalManager />}></Route>
               <Route path="/ai-assistant" element={<ChatBot />} />
             </Route>
