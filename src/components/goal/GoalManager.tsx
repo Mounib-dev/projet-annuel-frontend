@@ -35,7 +35,6 @@ export default function GoalManager() {
           `${import.meta.env.VITE_API_BASE_URL}/goal/`,
         );
         if (response.status !== 200) throw new Error("Erreur de récupération");
-        console.log("DATA FETCHED:", response.data);
 
         setGoals(response.data);
       } catch (error) {
