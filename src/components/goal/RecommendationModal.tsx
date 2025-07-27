@@ -83,7 +83,9 @@ export default function RecommendationModal({
                 ),
               }}
             >
-              {goal.recommendation}
+              {goal.recommendation
+                ? `${goal.recommendation}`
+                : "Vous n'avez pas encore de recommandations."}
             </ReactMarkdown>
           </div>
         </div>
