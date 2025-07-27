@@ -1,33 +1,44 @@
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
 
+type ChatMessage = {
+  role: "user" | "assistant";
+  content: string;
+};
+
 function ChatBot() {
-  const [messages, setMessages] = useState([]);
-  const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
-  const chatContainerRef = useRef(null);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [input, setInput] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
+  const chatContainerRef = useRef<HTMLDivElement | null>(null);
 
   const { token } = useAuth();
 
   useEffect(() => {
-    chatContainerRef.current?.scrollTo({
-      top: chatContainerRef.current.scrollHeight,
-      behavior: "smooth",
-    });
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTo({
+        top: chatContainerRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+    }
   }, [messages]);
 
-  const handleSubmit = async (event) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!input.trim()) return;
 
-    const newMessages = [...messages, { role: "user", content: input }];
+    const newMessages: ChatMessage[] = [
+      ...messages,
+      { role: "user", content: input },
+    ];
     setMessages(newMessages);
     setInput("");
     setLoading(true);
 
     try {
+      const aiAssistantEndpoint = "/chatbot/assistant";
       const response = await fetch(
-        "http://localhost:3000/api/v1/chatbot/assistant",
+        `${import.meta.env.VITE_API_BASE_URL}` + aiAssistantEndpoint,
         {
           method: "POST",
           headers: {
@@ -46,7 +57,7 @@ function ChatBot() {
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
-      let botMessage = { role: "assistant", content: "" };
+      const botMessage: ChatMessage = { role: "assistant", content: "" };
 
       const readStream = async () => {
         while (true) {
