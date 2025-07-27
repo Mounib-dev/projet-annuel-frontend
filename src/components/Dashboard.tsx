@@ -1,5 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
-import ThemeToggle from "./ThemeToggle";
+import { useEffect, useState } from "react";
 import {
   isSameDay,
   isSameMonth,
@@ -24,11 +23,16 @@ import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import api from "../api";
-
+import { Transaction } from "../types/transaction";
+import { FilterType, Totals } from "../types/dashboard";
 
 const ITEMS_PER_PAGE = 10;
 
-const filterTransactions = (transactions, filter, selectedDate) => {
+const filterTransactions = (
+  transactions: Transaction[],
+  filter: FilterType,
+  selectedDate: Date,
+): Transaction[] => {
   return transactions.filter((tx) => {
     const date = new Date(tx.date);
     switch (filter) {
@@ -46,9 +50,9 @@ const filterTransactions = (transactions, filter, selectedDate) => {
   });
 };
 
-const calculateTotals = (transactions) => {
-  const income = transactions.filter(tx => tx.type === "income");
-  const expense = transactions.filter(tx => tx.type === "expense");
+const calculateTotals = (transactions: Transaction[]) => {
+  const income = transactions.filter((tx) => tx.type === "income");
+  const expense = transactions.filter((tx) => tx.type === "expense");
   const totalIncome = income.reduce((acc, tx) => acc + Number(tx.amount), 0);
   const totalExpense = expense.reduce((acc, tx) => acc + Number(tx.amount), 0);
   return {
@@ -56,24 +60,34 @@ const calculateTotals = (transactions) => {
     expense,
     totalIncome,
     totalExpense,
-    balance: totalIncome - totalExpense
+    balance: totalIncome - totalExpense,
   };
 };
 
-const getMonthlyStats = (transactions, selectedDate) => {
+const getMonthlyStats = (transactions: Transaction[], selectedDate: Date) => {
   return Array.from({ length: 12 }, (_, i) => {
     const label = new Date(0, i).toLocaleString("fr-FR", { month: "short" });
-    const monthTxs = transactions.filter(tx => {
+    const monthTxs = transactions.filter((tx) => {
       const d = new Date(tx.date);
-      return d.getFullYear() === selectedDate.getFullYear() && d.getMonth() === i;
+      return (
+        d.getFullYear() === selectedDate.getFullYear() && d.getMonth() === i
+      );
     });
-    const income = monthTxs.filter(tx => tx.type === "income").reduce((sum, tx) => sum + Number(tx.amount), 0);
-    const expense = monthTxs.filter(tx => tx.type === "expense").reduce((sum, tx) => sum + Number(tx.amount), 0);
+    const income = monthTxs
+      .filter((tx) => tx.type === "income")
+      .reduce((sum, tx) => sum + Number(tx.amount), 0);
+    const expense = monthTxs
+      .filter((tx) => tx.type === "expense")
+      .reduce((sum, tx) => sum + Number(tx.amount), 0);
     return { name: label, Revenus: income, Dépenses: expense };
   });
 };
 
-const exportPDF = (filteredTransactions, totals, currentLabel) => {
+const exportPDF = (
+  filteredTransactions: Transaction[],
+  totals: Totals,
+  currentLabel: string,
+) => {
   const doc = new jsPDF();
   doc.setFontSize(16);
   doc.text(`Résumé Budgétaire - ${currentLabel}`, 10, 15);
@@ -82,20 +96,29 @@ const exportPDF = (filteredTransactions, totals, currentLabel) => {
   doc.text(`Dépenses: ${totals.totalExpense.toFixed(2)} €`, 10, 40);
   doc.text(`Solde: ${totals.balance.toFixed(2)} €`, 10, 50);
 
-  const rows = filteredTransactions.map(tx => [tx.description, tx.type, tx.amount.toFixed(2), format(new Date(tx.date), "dd/MM/yyyy")]);
+  const rows = filteredTransactions.map((tx) => [
+    tx.description,
+    tx.type,
+    tx.amount.toFixed(2),
+    format(new Date(tx.date), "dd/MM/yyyy"),
+  ]);
   autoTable(doc, {
     head: [["Description", "Type", "Montant (€)", "Date"]],
     body: rows,
     startY: 60,
-    theme: 'striped',
+    theme: "striped",
     headStyles: { fillColor: [40, 40, 40] },
-    alternateRowStyles: { fillColor: [245, 245, 245] }
+    alternateRowStyles: { fillColor: [245, 245, 245] },
   });
 
   doc.save(`budget-${currentLabel.replace(/\s/g, "_")}.pdf`);
 };
 
-const exportExcel = (filteredTransactions, totals, currentLabel) => {
+const exportExcel = (
+  filteredTransactions: Transaction[],
+  totals: Totals,
+  currentLabel: string,
+) => {
   const wsData = [
     [`Résumé Budgétaire - ${currentLabel}`],
     [`Revenus: ${totals.totalIncome.toFixed(2)} €`],
@@ -121,26 +144,24 @@ const exportExcel = (filteredTransactions, totals, currentLabel) => {
 
 const Dashboard = () => {
   const [transactions, setTransactions] = useState([]);
-  const [filter, setFilter] = useState("month");
+  const [filter, setFilter] = useState<FilterType>("month");
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [manualBalance, setManualBalance] = useState<number | null>(null);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [currentPage, setCurrentPage] = useState(1);
-   const alertShown = useRef(false);
-   const [showAlert, setShowAlert] = useState(false);
-const [bigExpenseCount, setBigExpenseCount] = useState(0);
-
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
   useEffect(() => {
-    api.get(`${import.meta.env.VITE_API_BASE_URL}/transaction/list`)
-      .then(res => setTransactions(res.data))
-      .catch(console.error);
-  }, []);
-
-  useEffect(() => {
-    api.get(`${import.meta.env.VITE_API_BASE_URL}/balance`)
-      .then(res => setManualBalance(res.data?.amount ?? 0))
-      .catch(console.error);
+    const fetchData = async () => {
+      try {
+        const res = await api.get(
+          `${import.meta.env.VITE_API_BASE_URL}/transaction/list`,
+        );
+        setTransactions(res.data);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    fetchData();
   }, []);
 
   useEffect(() => {
@@ -148,224 +169,324 @@ const [bigExpenseCount, setBigExpenseCount] = useState(0);
     return () => clearInterval(timer);
   }, []);
 
-  const filteredTransactions = filterTransactions(transactions, filter, selectedDate);
-  const { income, expense, totalIncome, totalExpense,balance } = calculateTotals(filteredTransactions);
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filter, selectedDate]);
 
-useEffect(() => {
-  const bigExpenses = filteredTransactions.filter(
-    tx => tx.type === "expense" && Number(tx.amount) > 150
+  // Détecter le thème global (dark mode activé ?)
+  useEffect(() => {
+    const updateTheme = () => {
+      setIsDarkMode(document.documentElement.classList.contains("dark"));
+    };
+    updateTheme();
+    const observer = new MutationObserver(updateTheme);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+    return () => observer.disconnect();
+  }, []);
+
+  const filteredTransactions = filterTransactions(
+    transactions,
+    filter,
+    selectedDate,
   );
-  if (bigExpenses.length > 0 && !alertShown.current) {
-    setBigExpenseCount(bigExpenses.length);
-    setShowAlert(true);
-    alertShown.current = true;
-  }
-}, [filteredTransactions]);
-
- 
-
-  const summaryMessage = filteredTransactions.length === 0
-    ? ""
-    : balance! < 0
-    ? "Vous avez dépensé plus que vos revenus. Attention à votre budget."
-    : balance! < totalIncome * 0.2
-    ? "Vos dépenses sont proches de vos revenus. Restez vigilant."
-    : "Bonne gestion ! Vos revenus couvrent bien vos dépenses.";
-
-  const summaryColor = balance! >= 0 ? "text-green-600" : "text-red-600";
-
-  const currentLabel = filter === "day"
-    ? format(selectedDate, "dd MMM yyyy")
-    : filter === "week"
-    ? `Semaine du ${format(selectedDate, "dd MMM yyyy")}`
-    : filter === "month"
-    ? format(selectedDate, "MMMM yyyy")
-    : format(selectedDate, "yyyy");
-
-  const lineChartData = filter === "year"
-    ? getMonthlyStats(transactions, selectedDate)
-    : filter === "month"
-    ? Array.from(
-        { length: new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0).getDate() },
-        (_, day) => {
-          const currentDay = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), day + 1);
-          const txs = transactions.filter(tx => isSameDay(new Date(tx.date), currentDay));
-          const inc = txs.filter(tx => tx.type === "income").reduce((s, tx) => s + Number(tx.amount), 0);
-          const exp = txs.filter(tx => tx.type === "expense").reduce((s, tx) => s + Number(tx.amount), 0);
-          return { name: format(currentDay, "dd/MM"), Revenus: inc, Dépenses: exp };
-        }
-      )
-    : [{ name: format(selectedDate, "dd/MM"), Revenus: totalIncome, Dépenses: totalExpense }];
+  const { income, expense, totalIncome, totalExpense, balance } =
+    calculateTotals(filteredTransactions);
 
   const totalPages = Math.ceil(filteredTransactions.length / ITEMS_PER_PAGE);
-  const paginatedTransactions = filteredTransactions.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
-  const pieData = [...expense].sort((a, b) => b.amount - a.amount).slice(0, 5)
-    .map(tx => ({ name: tx.description, value: Number(tx.amount) }));
+  const paginatedTransactions = filteredTransactions.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE,
+  );
+
+  const topExpenses = [...expense]
+    .sort((a, b) => b.amount - a.amount)
+    .slice(0, 5);
+  const pieData = topExpenses.map((tx) => ({
+    name: tx.description,
+    value: Number(tx.amount),
+  }));
   const COLORS = ["#D32F2F", "#F57C00", "#FBC02D", "#388E3C", "#1976D2"];
 
-  return (
-    <div className="dark:bg-gray-50 text-gray-900 min-h-screen overflow-x-hidden p-6">
-   
-{showAlert && (
-  <div className="relative mb-6">
-    <div className="bg-red-100 border border-red-400 text-red-600 px-4 py-4 rounded-lg shadow-md flex justify-between items-center animate-slide-down">
-      <div className="flex items-center gap-2">
-        <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4m0 4h.01M4.93 4.93l14.14 14.14M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        <span className="text-sm sm:text-base">
-          Attention : {bigExpenseCount} dépense(s) dépassent 150 €.
-        </span>
-      </div>
-      <button onClick={() => setShowAlert(false)} className="ml-4 text-red-700 hover:text-red-900 transition">
-        ✕
-      </button>
-    </div>
-  </div>
-)}
+  const summaryMessage =
+    balance < 0
+      ? "Vous avez dépensé plus que vos revenus. Attention à votre budget."
+      : balance < totalIncome * 0.2
+        ? "Vos dépenses sont proches de vos revenus. Restez vigilant."
+        : "Bonne gestion ! Vos revenus couvrent bien vos dépenses.";
 
-      <div className="max-w-7xl mx-auto">
-        <header className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
-          <h1 className="text-3xl font-extrabold">Dashboard</h1>
+  const summaryColor =
+    balance >= 0
+      ? "text-green-600 dark:text-green-400"
+      : "text-red-600 dark:text-red-400";
+
+  const currentLabel =
+    filter === "day"
+      ? format(selectedDate, "dd MMM yyyy")
+      : filter === "week"
+        ? `Semaine du ${format(selectedDate, "dd MMM yyyy")}`
+        : filter === "month"
+          ? format(selectedDate, "MMMM yyyy")
+          : format(selectedDate, "yyyy");
+
+  const lineChartData =
+    filter === "year"
+      ? getMonthlyStats(transactions, selectedDate)
+      : filter === "month"
+        ? Array.from(
+            {
+              length: new Date(
+                selectedDate.getFullYear(),
+                selectedDate.getMonth() + 1,
+                0,
+              ).getDate(),
+            },
+            (_, day) => {
+              const currentDay = new Date(
+                selectedDate.getFullYear(),
+                selectedDate.getMonth(),
+                day + 1,
+              );
+              const txs = transactions.filter((tx: Transaction) =>
+                isSameDay(new Date(tx.date), currentDay),
+              );
+              const income = txs
+                .filter((tx: Transaction) => tx.type === "income")
+                .reduce((sum, tx: Transaction) => sum + Number(tx.amount), 0);
+              const expense = txs
+                .filter((tx: Transaction) => tx.type === "expense")
+                .reduce((sum, tx: Transaction) => sum + Number(tx.amount), 0);
+              return {
+                name: format(currentDay, "dd/MM"),
+                Revenus: income,
+                Dépenses: expense,
+              };
+            },
+          )
+        : [
+            {
+              name: format(selectedDate, "dd/MM"),
+              Revenus: totalIncome,
+              Dépenses: totalExpense,
+            },
+          ];
+
+  return (
+    <div className="min-h-screen bg-gray-50 p-6 text-gray-900 transition-colors duration-500 dark:bg-gray-900 dark:text-gray-100">
+      <div className="mx-auto max-w-7xl">
+        {/* Header */}
+        <header className="mb-8 flex flex-col items-center justify-between gap-4 sm:flex-row">
+          <h1 className="text-3xl font-extrabold tracking-tight">Dashboard</h1>
+
           <div className="flex gap-3">
-            <button onClick={() => exportPDF(paginatedTransactions, { totalIncome, totalExpense, balance: manualBalance! }, currentLabel)} className="dark:bg-green-400 dark:text-white px-5 py-2 rounded-lg">Exporter PDF</button>
-            <button onClick={() => exportExcel(paginatedTransactions, { totalIncome, totalExpense, balance: manualBalance! }, currentLabel)} className="dark:bg-green-400 dark:text-white px-5 py-2 rounded-lg">Exporter Excel</button>
+            <button
+              onClick={() =>
+                exportPDF(
+                  filteredTransactions,
+                  { income, expense, totalIncome, totalExpense, balance },
+                  currentLabel,
+                )
+              }
+              className="rounded-lg bg-green-600 px-5 py-2 font-semibold text-white shadow hover:bg-green-700"
+            >
+              Exporter PDF
+            </button>
+
+            <button
+              onClick={() =>
+                exportExcel(
+                  filteredTransactions,
+                  { income, expense, totalIncome, totalExpense, balance },
+                  currentLabel,
+                )
+              }
+              className="rounded-lg bg-green-600 px-5 py-2 font-semibold text-white shadow hover:bg-green-700"
+            >
+              Exporter Excel
+            </button>
           </div>
         </header>
 
-        <p className="text-sm italic dark:text-gray-600 mb-4 text-right">
+        <p className="mb-4 text-right text-sm text-gray-600 italic dark:text-gray-400">
           Heure actuelle : {format(currentTime, "HH:mm:ss")}
         </p>
 
-        <section className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
-          <select value={filter} onChange={(e) => setFilter(e.target.value)} className="px-4 py-2 rounded-lg border dark: bg-white">
+        {/* Filters */}
+        <section className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center">
+          <select
+            value={filter}
+            onChange={(e) => setFilter(e.target.value as FilterType)}
+            className="rounded-lg border border-gray-300 bg-white px-4 py-2 dark:border-gray-700 dark:bg-gray-800"
+          >
             <option value="day">Jour</option>
             <option value="week">Semaine</option>
             <option value="month">Mois</option>
             <option value="year">Année</option>
           </select>
 
-          <input type="date" value={format(selectedDate, "yyyy-MM-dd")} onChange={(e) => setSelectedDate(new Date(e.target.value))} className="px-4 py-2 rounded-lg border bg-white" />
-
-          {filter === "month" && (
-            <select value={selectedDate.getMonth()} onChange={(e) => setSelectedDate(new Date(selectedDate.getFullYear(), Number(e.target.value)))} className="px-4 py-2 rounded-lg border bg-white">
-              {Array.from({ length: 12 }, (_, i) => (
-                <option key={i} value={i}>
-                  {new Date(0, i).toLocaleString("fr-FR", { month: "long" })}
-                </option>
-              ))}
-            </select>
-          )}
+          <input
+            type="date"
+            value={format(selectedDate, "yyyy-MM-dd")}
+            onChange={(e) => setSelectedDate(new Date(e.target.value))}
+            className="rounded-lg border border-gray-300 bg-white px-4 py-2 dark:border-gray-700 dark:bg-gray-800"
+          />
         </section>
 
-        <h2 className="text-xl font-semibold mb-6 text-center sm:text-left">Période : {currentLabel}</h2>
+        {/* Period Label */}
+        <h2 className="mb-6 text-xl font-semibold">Période : {currentLabel}</h2>
 
-        <section className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
-          <div className="bg-green-300 rounded-lg shadow-lg p-6 text-center">
-            <span className="block font-bold mb-1">Revenus</span>
-            <span className="text-3xl font-extrabold">{totalIncome.toFixed(2)} €</span>
+        {/* Totals */}
+        <section className="mb-8 grid grid-cols-1 gap-6 sm:grid-cols-3">
+          <div className="flex flex-col items-center rounded-lg bg-green-600 p-6 shadow dark:bg-green-700">
+            <span className="mb-1 text-lg font-bold">Revenus</span>
+            <span className="text-3xl font-extrabold">
+              {totalIncome.toFixed(2)} €
+            </span>
           </div>
-          <div className="bg-red-400 rounded-lg shadow-lg p-6 text-center">
-            <span className="block font-bold mb-1">Dépenses</span>
-            <span className="text-3xl font-extrabold">{totalExpense.toFixed(2)} €</span>
+
+          <div className="flex flex-col items-center rounded-lg bg-red-600 p-6 shadow dark:bg-red-700">
+            <span className="mb-1 text-lg font-bold">Dépenses</span>
+            <span className="text-3xl font-extrabold">
+              {totalExpense.toFixed(2)} €
+            </span>
           </div>
-          <div className="bg-blue-300 rounded-lg shadow-lg p-6 text-center">
-            <span className="block font-bold mb-1">Solde</span>
-            <span className="text-3xl font-extrabold">{manualBalance !== null ? manualBalance.toFixed(2) : "-" } €</span>
+
+          <div className="flex flex-col items-center rounded-lg bg-blue-600 p-6 shadow dark:bg-blue-700">
+            <span className="mb-1 text-lg font-bold">Solde</span>
+            <span className="text-3xl font-extrabold">
+              {balance.toFixed(2)} €
+            </span>
           </div>
         </section>
 
-        {summaryMessage && (
-          <section className={`mb-8 px-6 py-4 rounded-lg border-2 ${balance! >= 0 ? "border-green-600 bg-green-50" : "border-red-600 bg-red-50"}`}>
-            <p className={`text-center font-semibold text-lg ${summaryColor}`}>{summaryMessage}</p>
-          </section>
-        )}
+        {/* Summary */}
+        <section
+          className={`mb-8 rounded-lg border px-6 py-4 ${
+            balance >= 0
+              ? "border-green-600 bg-green-100 dark:bg-green-900"
+              : "border-red-600 bg-red-100 dark:bg-red-900"
+          }`}
+        >
+          <p className={`text-center text-lg font-semibold ${summaryColor}`}>
+            {summaryMessage}
+          </p>
+        </section>
 
-        <section className="grid grid-cols-1 md:grid-cols-2 gap-10 mb-12">
+        {/* Charts */}
+        <section className="mb-12 grid grid-cols-1 gap-10 md:grid-cols-2">
+          {/* Line Chart */}
           <div>
-            <h3 className="text-xl font-semibold mb-4">Évolution Revenus vs Dépenses</h3>
+            <h3 className="mb-4 text-xl font-semibold">
+              Évolution Revenus vs Dépenses
+            </h3>
             <ResponsiveContainer width="100%" height={320}>
               <LineChart data={lineChartData}>
-                <XAxis dataKey="name" stroke="#333" />
-                <YAxis stroke="#333" />
-                <Tooltip contentStyle={{ backgroundColor: "#fff", borderRadius: 8 }} labelStyle={{ color: "#333" }} />
-                <Legend verticalAlign="top" height={36} />
-                <Line type="monotone" dataKey="Revenus" stroke="#10b981" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 8 }} />
-                <Line type="monotone" dataKey="Dépenses" stroke="#ef4444" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 8 }} />
+                <XAxis dataKey="name" stroke={isDarkMode ? "#ddd" : "#333"} />
+                <YAxis stroke={isDarkMode ? "#ddd" : "#333"} />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: isDarkMode ? "#222" : "#fff",
+                    color: isDarkMode ? "#ddd" : "#333",
+                  }}
+                />
+                <Legend />
+                <Line type="monotone" dataKey="Revenus" stroke="#10b981" />
+                <Line type="monotone" dataKey="Dépenses" stroke="#ef4444" />
               </LineChart>
             </ResponsiveContainer>
           </div>
           <div>
-            <h3 className="text-xl font-semibold mb-4">Top 5 Dépenses</h3>
+            <h3 className="mb-4 text-xl font-semibold">Top 5 Dépenses</h3>
             {pieData.length > 0 ? (
               <ResponsiveContainer width="100%" height={320}>
                 <PieChart>
-                  <Pie data={pieData} dataKey="value" nameKey="name" outerRadius={100} label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`} labelLine={false} fill="#8884d8">
-                    {pieData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                  <Pie
+                    data={pieData}
+                    dataKey="value"
+                    nameKey="name"
+                    outerRadius={100}
+                    label={({ name, percent }) =>
+                      `${name} (${(percent * 100).toFixed(0)}%)`
+                    }
+                  >
+                    {pieData.map((_, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={COLORS[index % COLORS.length]}
+                      />
+                    ))}
                   </Pie>
-                  <Tooltip contentStyle={{ backgroundColor: "#fff", borderRadius: 8 }} labelStyle={{ color: "#333" }} />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: isDarkMode ? "#222" : "#fff",
+                      color: isDarkMode ? "#ddd" : "#333",
+                    }}
+                  />
                 </PieChart>
               </ResponsiveContainer>
             ) : (
-              <p className="text-center text-gray-500 italic">Aucune dépense à afficher</p>
+              <p>Aucune dépense à afficher</p>
             )}
           </div>
         </section>
 
-        <section>
-          <h3 className="text-xl font-semibold mb-4 flex items-center justify-between flex-wrap gap-4">
+        {/* Transactions */}
+        <section id="trasactions">
+          <h3 className="mb-4 text-xl font-semibold">
             Historique des Transactions
-            
           </h3>
 
           {paginatedTransactions.length === 0 ? (
-            <p className="text-center text-gray-500 italic">Aucun historique trouvé.</p>
+            <p className="text-center text-gray-500 dark:text-gray-400">
+              Aucun historique trouvé.
+            </p>
           ) : (
             <>
-              <ul className="divide-y divide-gray-300 rounded-md border border-gray-300 shadow-lg overflow-hidden">
+              <ul className="divide-y divide-gray-300 rounded border dark:divide-gray-700 dark:border-gray-700">
                 {paginatedTransactions.map((tx, idx) => (
                   <li
-                    key={`${tx.id || idx}-${tx.date}`}
-                    className={`flex justify-between items-center px-6 py-4 ${
+                    key={`${tx._id || idx}-${tx.date}`}
+                    className={`flex justify-between px-6 py-4 ${
                       tx.type === "expense"
-                        ? "bg-red-50 text-red-700"
-                        : "bg-green-50 text-green-700"
-                    } hover:bg-opacity-80 transition`}
+                        ? "bg-red-50 text-red-700 dark:bg-red-900 dark:text-red-400"
+                        : "bg-green-50 text-green-700 dark:bg-green-900 dark:text-green-400"
+                    }`}
                   >
-                    <div className="font-semibold">{tx.description}</div>
-                    <div className="text-sm tracking-wide flex gap-3 items-center">
-                     <div className="text-sm tracking-wide flex gap-3 items-center">
-  <span>{tx.type === "income" ? "+" : "-"}{Number(tx.amount).toFixed(2)} €</span>
-  <span className="text-gray-500">{format(new Date(tx.date), "dd/MM/yyyy")}</span>
-</div>
-
+                    <div>{tx.description}</div>
+                    <div>
+                      {tx.amount.toFixed(2)} € -{" "}
+                      {format(new Date(tx.date), "dd/MM/yyyy")}
                     </div>
                   </li>
                 ))}
               </ul>
 
-              <div className="flex justify-center items-center gap-3 mt-6">
+              <div className="mt-6 flex justify-center gap-3">
                 <button
                   onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                   disabled={currentPage === 1}
-                  className={`px-4 py-2 rounded-lg font-semibold transition ${
+                  className={`rounded px-4 py-2 ${
                     currentPage === 1
-                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                      : "bg-purple-600 text-white"
+                      ? "bg-gray-300"
+                      : "bg-purple-600 text-white hover:bg-purple-700"
                   }`}
                 >
                   ← Précédent
                 </button>
-                <span className="font-semibold text-gray-700">
+                <span>
                   Page {currentPage} / {totalPages || 1}
                 </span>
                 <button
-                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  onClick={() =>
+                    setCurrentPage((p) => Math.min(totalPages, p + 1))
+                  }
                   disabled={currentPage === totalPages || totalPages === 0}
-                  className={`px-4 py-2 rounded-lg font-semibold transition ${
+                  className={`rounded px-4 py-2 ${
                     currentPage === totalPages || totalPages === 0
-                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                      : "bg-purple-600 text-white"
+                      ? "bg-gray-300"
+                      : "bg-purple-600 text-white hover:bg-purple-700"
                   }`}
                 >
                   Suivant →
