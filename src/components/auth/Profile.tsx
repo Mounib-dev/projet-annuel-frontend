@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Mail, ShieldCheck, LogOut } from "lucide-react";
+import { Mail, ShieldCheck, LogOut, UserCircle2 } from "lucide-react";
 import api from "../../api";
 
 const Profile = () => {
@@ -26,72 +26,67 @@ const Profile = () => {
   }, []);
 
   const logout = () => {
-    // Remplace ceci par ta logique de déconnexion
     console.log("Déconnexion...");
-    localStorage.clear(); // ou remove token
-    window.location.href = "/login"; // redirection vers page login
+    localStorage.clear();
+    window.location.href = "/login";
   };
 
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-gray-100 dark:bg-gray-900">
-        <p className="text-gray-500 dark:text-gray-400">Chargement...</p>
+      <div className="flex h-screen items-center justify-center bg-white dark:bg-[#0f172a]">
+
+        <p className="text-gray-500 dark:text-gray-400 animate-pulse">
+          Chargement...
+        </p>
       </div>
     );
   }
 
   if (!profile) {
     return (
-      <div className="flex h-screen items-center justify-center bg-gray-100 dark:bg-gray-900">
+    <div className="flex h-screen items-center justify-center bg-white dark:bg-[#0f172a]">
+
         <p className="text-red-500">Impossible de charger le profil</p>
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-green-100 to-green-300 dark:from-gray-900 dark:to-gray-800 px-4">
-      <div className="w-full max-w-md rounded-2xl bg-white dark:bg-gray-900 p-6 shadow-2xl transition-all duration-300">
-        <h2 className="mb-6 text-center text-3xl font-bold text-gray-800 dark:text-white">
-          Mon Profil
-        </h2>
-        <div className="space-y-4 text-center">
-          <div>
-            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-              Prénom
-            </p>
-            <p className="text-lg font-semibold text-gray-800 dark:text-white">
-              {profile.firstname}
-            </p>
-          </div>
-          <div>
-            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-              Nom
-            </p>
-            <p className="text-lg font-semibold text-gray-800 dark:text-white">
-              {profile.lastname}
-            </p>
-          </div>
-          <div className="flex items-center justify-center gap-2">
-            <Mail size={16} className="text-green-500" />
-            <p className="text-md text-gray-700 dark:text-gray-300">
-              {profile.email}
-            </p>
-          </div>
-          <div className="inline-flex items-center gap-2 rounded-full bg-green-100 px-4 py-1 text-green-700 dark:bg-green-800 dark:text-green-200">
-            <ShieldCheck size={16} />
-            <span className="text-sm capitalize">{profile.role}</span>
-          </div>
-        </div>
-        <div className="mt-8 flex justify-center">
-          <button
-            onClick={logout}
-            className="flex items-center gap-2 rounded-full bg-red-500 px-5 py-2 text-white transition hover:bg-red-600"
-          >
-            <LogOut size={18} /> Déconnexion
-          </button>
+    <div className="min-h-screen flex items-center justify-center bg-white dark:bg-[#0f172a] px-4 py-10">
+
+  <div className="w-full max-w-lg rounded-3xl bg-white dark:bg-gray-800 p-8 shadow-2xl transition-all duration-300">
+    <div className="flex flex-col items-center text-center space-y-6">
+      <div className="rounded-full bg-green-100 dark:bg-green-900 p-3">
+        <UserCircle2 className="h-20 w-20 text-green-600 dark:text-green-300" />
+      </div>
+      <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
+        {profile.firstname} {profile.lastname}
+      </h2>
+      <div className="mt-2 inline-flex items-center gap-2 rounded-full bg-green-100 px-4 py-1 text-sm text-green-700 dark:bg-green-800 dark:text-green-200">
+        <ShieldCheck size={16} />
+        <span className="capitalize">{profile.role}</span>
+      </div>
+
+      <div className="w-full text-left space-y-4 mt-6">
+        <div className="flex items-center gap-3">
+          <Mail className="text-green-500" />
+          <span className="text-gray-700 dark:text-gray-300">
+            {profile.email}
+          </span>
         </div>
       </div>
+
+      <button
+        onClick={logout}
+        className="mt-8 inline-flex items-center gap-2 rounded-full bg-red-500 px-6 py-2 text-white transition hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300 dark:focus:ring-red-800"
+      >
+        <LogOut size={18} />
+        Déconnexion
+      </button>
     </div>
+  </div>
+</div>
+
   );
 };
 
