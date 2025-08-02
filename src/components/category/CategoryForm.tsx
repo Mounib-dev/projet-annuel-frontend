@@ -1,17 +1,27 @@
 import { useState } from "react";
-import { Martini, CreditCard, HomeIcon, ShoppingCart, GiftIcon} from "lucide-react";
+import {
+  Martini,
+  CreditCard,
+  HomeIcon,
+  ShoppingCart,
+  GiftIcon,
+} from "lucide-react";
 import api from "../../api";
 
 interface CategoryFormProps {
-  onAddCategory: (newCategory: { id: string; title: string; icon: React.ReactNode }) => void;
+  onAddCategory: (newCategory: {
+    id: string;
+    title: string;
+    icon: React.ReactNode;
+  }) => void;
 }
 
 const iconMap: Record<string, React.ReactNode> = {
-  "martini": <Martini />,
+  martini: <Martini />,
   "credit-card": <CreditCard />,
-  "homeIcon": <HomeIcon />,
+  homeIcon: <HomeIcon />,
   "shopping-cart": <ShoppingCart />,
-  "GiftIcon": <GiftIcon />,
+  GiftIcon: <GiftIcon />,
 };
 
 const CategoryForm = ({ onAddCategory }: CategoryFormProps) => {
@@ -19,10 +29,8 @@ const CategoryForm = ({ onAddCategory }: CategoryFormProps) => {
   const [icon, setIcon] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
-
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log("Catégorie envoyée :", { title, icon });
 
     try {
       const response = await api.post("/category/create", {
@@ -43,9 +51,8 @@ const CategoryForm = ({ onAddCategory }: CategoryFormProps) => {
 
         setTitle("");
         setIcon("");
-       setSuccessMessage("Catégorie ajoutée avec succès !");
-       setTimeout(() => setSuccessMessage(""), 3000);
-
+        setSuccessMessage("Catégorie ajoutée avec succès !");
+        setTimeout(() => setSuccessMessage(""), 3000);
       }
     } catch (error) {
       console.error("Erreur lors de l'ajout :", error);
@@ -103,7 +110,7 @@ const CategoryForm = ({ onAddCategory }: CategoryFormProps) => {
               <CreditCard />
             </span>
           </label>
-             {/* Home icon radio */}
+          {/* Home icon radio */}
           <label className="flex cursor-pointer items-center space-x-2">
             <input
               type="radio"
@@ -118,8 +125,8 @@ const CategoryForm = ({ onAddCategory }: CategoryFormProps) => {
               <HomeIcon />
             </span>
           </label>
-             {/* shopping Card icon radio */}
-             <label className="flex cursor-pointer items-center space-x-2">
+          {/* shopping Card icon radio */}
+          <label className="flex cursor-pointer items-center space-x-2">
             <input
               type="radio"
               name="categoryIcon"
@@ -134,8 +141,8 @@ const CategoryForm = ({ onAddCategory }: CategoryFormProps) => {
             </span>
           </label>
 
-             {/* gift icon radio */}
-             <label className="flex cursor-pointer items-center space-x-2">
+          {/* gift icon radio */}
+          <label className="flex cursor-pointer items-center space-x-2">
             <input
               type="radio"
               name="categoryIcon"
@@ -159,14 +166,12 @@ const CategoryForm = ({ onAddCategory }: CategoryFormProps) => {
         >
           Ajouter
         </button>
-
       </div>
       {successMessage && (
-  <div className="mt-4 text-green-500 text-center font-semibold transition-opacity duration-300">
-    {successMessage}
-  </div>
-)}
-
+        <div className="mt-4 text-center font-semibold text-green-500 transition-opacity duration-300">
+          {successMessage}
+        </div>
+      )}
     </form>
   );
 };
