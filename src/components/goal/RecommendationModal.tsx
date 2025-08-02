@@ -17,7 +17,7 @@ export default function RecommendationModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+    <div  data-testid="recommendation-modal" className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
       <div className="relative max-h-[85vh] w-full max-w-md overflow-hidden rounded-xl bg-white p-6 ring-1 shadow-lg ring-green-400 dark:bg-gray-800">
         <button
           onClick={onClose}

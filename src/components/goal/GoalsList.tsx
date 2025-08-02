@@ -193,9 +193,10 @@ export default function GoalsList({
 
             <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
               <div>
-                <label className="block text-sm font-medium">Description</label>
+                <label htmlFor="description-input" className="block text-sm font-medium">Description</label>
                 <input
                   type="text"
+                   id="description-input"
                   className="mt-1 w-full rounded-md border border-gray-300 p-2 dark:border-gray-700 dark:bg-gray-700"
                   value={editData.description}
                   onChange={(e) =>
@@ -205,11 +206,12 @@ export default function GoalsList({
               </div>
 
               <div>
-                <label className="block text-sm font-medium">
+                <label htmlFor="amount-input" className="block text-sm font-medium">
                   Montant cible (€)
                 </label>
                 <input
                   type="number"
+                  id="amount-input"
                   className="mt-1 w-full rounded-md border border-gray-300 p-2 dark:border-gray-700 dark:bg-gray-700"
                   value={editData.targetAmount}
                   onChange={(e) =>
@@ -222,9 +224,10 @@ export default function GoalsList({
               </div>
 
               <div>
-                <label className="block text-sm font-medium">Date cible</label>
+                <label htmlFor="date-input" className="block text-sm font-medium">Date cible</label>
                 <input
                   type="date"
+                  id="date-input"
                   className="mt-1 w-full rounded-md border border-gray-300 p-2 dark:border-gray-700 dark:bg-gray-700"
                   value={editData.targetDate}
                   onChange={(e) =>

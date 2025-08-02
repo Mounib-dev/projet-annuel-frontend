@@ -1,3 +1,4 @@
+
 import { useRef, useEffect } from "react";
 import { CircleX } from "lucide-react";
 
@@ -18,13 +19,16 @@ const DialogModal = ({
 
   useEffect(() => {
     const modalElement = modalRef.current;
-
     if (!modalElement) return;
 
     if (isOpen) {
-      modalElement.showModal();
+      if (typeof modalElement.showModal === "function") {
+        modalElement.showModal();
+      }
     } else {
-      modalElement.close();
+      if (typeof modalElement.close === "function") {
+        modalElement.close();
+      }
     }
   }, [isOpen]);
 
@@ -70,25 +74,23 @@ const DialogModal = ({
   }, [isOpen]);
 
   return (
-    <>
-      <dialog
-        ref={modalRef}
-        onKeyDown={handleKeyDown}
-        className="absolute mx-auto my-auto w-xl rounded-md bg-gray-900 p-5"
-      >
-        <div className="mb-2 flex justify-between">
-          <h3 className="text-green-500">Nouvelle catégorie</h3>
-          {hasCloseBtn && (
-            <CircleX
-              className="cursor-pointer text-green-500"
-              onClick={handleCloseModal}
-            />
-          )}
-        </div>
+    <dialog
+      ref={modalRef}
+      onKeyDown={handleKeyDown}
+      className="absolute mx-auto my-auto w-xl rounded-md bg-gray-900 p-5"
+    >
+      <div className="mb-2 flex justify-between">
+        <h3 className="text-green-500">Nouvelle catégorie</h3>
+        {hasCloseBtn && (
+          <CircleX
+            className="cursor-pointer text-green-500"
+            onClick={handleCloseModal}
+          />
+        )}
+      </div>
 
-        {children}
-      </dialog>
-    </>
+      {children}
+    </dialog>
   );
 };
 
