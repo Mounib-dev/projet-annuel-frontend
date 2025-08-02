@@ -64,11 +64,7 @@ function NavBar() {
                     Transactions
                   </Link>
                 </li>
-                <li className="py-2 md:py-0">
-                  <Link to="/graph" className="block hover:underline">
-                    Statistiques
-                  </Link>
-                </li>
+
                 <li className="py-2 md:py-0">
                   <Link to="/goal" className="block hover:underline">
                     Goals

@@ -1,7 +1,6 @@
 import axios from "axios";
 import { Pencil, Sparkles, Trash2, Lightbulb } from "lucide-react";
 import { useEffect, useState } from "react";
-
 import ConfirmRecommendation from "./ConfirmRecommendation";
 import RecommendationModal from "./RecommendationModal";
 
@@ -10,44 +9,21 @@ export interface Goal {
   description: string;
   targetAmount: number;
   targetDate: string;
-  recommendation: string;
-  recommendationReady: boolean;
+  recommendation?: string;
+  recommendationReady?: boolean;
 }
 
 interface GoalsListProps {
   goals: Goal[];
-  onGoalsFetched: (goals: Goal[]) => void;
-  onGoalsUpdated: (goals: Goal) => void;
-  onGoalsDeleted: (goals: Goal) => void;
+  onGoalsUpdated: (goal: Goal) => void;
+  onGoalsDeleted: (goal: Goal) => void;
 }
 
 export default function GoalsList({
   goals,
-  onGoalsFetched,
   onGoalsUpdated,
   onGoalsDeleted,
 }: GoalsListProps) {
-  // Fetching Goals
-  useEffect(() => {
-    async function fetchGoals() {
-      try {
-        const newGoalEndpoint = "goal/";
-        const response = await axios.get(
-          `${import.meta.env.VITE_API_BASE_URL}/${newGoalEndpoint}`,
-        );
-        if (response.status !== 200)
-          throw new Error("Erreur lors de la récupération des objectifs.");
-        console.log(response.data);
-        onGoalsFetched(response.data);
-      } catch (error) {
-        console.error(error);
-        onGoalsFetched([]);
-      }
-    }
-    fetchGoals();
-  }, [onGoalsFetched]);
-
-  // Goal actions
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
   const [editData, setEditData] = useState({
     description: "",
@@ -56,7 +32,12 @@ export default function GoalsList({
   });
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  // Set information in form
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [isRecommendationModalOpen, setIsRecommendationModalOpen] =
+    useState(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [clickedGoal, setClickedGoal] = useState<Goal | null>(null);
+
   useEffect(() => {
     if (selectedGoal) {
       setEditData({
@@ -67,91 +48,61 @@ export default function GoalsList({
     }
   }, [selectedGoal]);
 
-  // Update
+  // ✅ Update
   const handleUpdate = async () => {
     if (!selectedGoal) return;
     try {
-      const updateGoalEndpoint = `goal/${selectedGoal._id}`;
-      const { description, targetAmount, targetDate } = editData;
       const response = await axios.patch(
-        `${import.meta.env.VITE_API_BASE_URL}/${updateGoalEndpoint}`,
-        { description, targetAmount, targetDate },
+        `${import.meta.env.VITE_API_BASE_URL}/goal/${selectedGoal._id}`,
+        editData,
       );
-      if (response.status !== 200)
-        throw new Error("Erreur lors de la modification de l'objectif.");
-      console.log(response.data);
+      if (response.status !== 200) throw new Error("Erreur modification");
       onGoalsUpdated(response.data);
       setSuccessMessage("Objectif modifié avec succès !");
-
-      // Ferme la modale après un court délai
       setTimeout(() => {
         setSuccessMessage(null);
         setSelectedGoal(null);
-      }, 1000); // tu peux ajuster ce délai
+      }, 1000);
     } catch (error) {
       console.error(error);
     }
   };
 
-  // Delete
+  // ✅ Delete
   const handleDelete = async () => {
     if (!selectedGoal) return;
-    const deleteGoalEndpoint = `goal/${selectedGoal._id}`;
-    const response = await axios.delete(
-      `${import.meta.env.VITE_API_BASE_URL}/${deleteGoalEndpoint}`,
-    );
-    if (response.status !== 204)
-      throw new Error("Erreur lors de la suppression de l'objectif.");
-    onGoalsDeleted(selectedGoal);
-    setSelectedGoal(null);
+    try {
+      const response = await axios.delete(
+        `${import.meta.env.VITE_API_BASE_URL}/goal/${selectedGoal._id}`,
+      );
+      if (response.status !== 204) throw new Error("Erreur suppression");
+      onGoalsDeleted(selectedGoal);
+      setSelectedGoal(null);
+    } catch (error) {
+      console.error(error);
+    }
   };
 
-  //Recommendations
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const [isRecommendationModalOpen, setIsRecommendationModalOpen] =
-    useState(false);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [clickedGoal, setClickedGoal] = useState<Goal | null>(null);
-
-  const handleOpenModal = (
-    _event: React.MouseEvent<HTMLButtonElement>,
-    goal: Goal,
-  ): void => {
-    setIsModalOpen(true);
-    // const goal = event.currentTarget.dataset.goal!;
-    console.log(goal);
-    setClickedGoal(goal);
-  };
-
-  const handleCloseModal = (): void => {
-    setIsModalOpen(false);
-    setClickedGoal(null);
-  };
-
+  // ✅ Recommendation IA
   const handleConfirmRecommendation = async (): Promise<void> => {
+    if (!clickedGoal) return;
     setIsLoading(true);
-    console.log(clickedGoal);
-    const generateRecommendationEndpoint = `goal/recommandation/${clickedGoal?._id}`;
-    const { description, targetAmount, targetDate } = clickedGoal!;
-
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_API_BASE_URL}/${generateRecommendationEndpoint}`,
-        { description, targetAmount, targetDate },
+        `${import.meta.env.VITE_API_BASE_URL}/goal/recommandation/${clickedGoal._id}`,
+        {
+          description: clickedGoal.description,
+          targetAmount: clickedGoal.targetAmount,
+          targetDate: clickedGoal.targetDate,
+        },
       );
-
-      if (response.status !== 200) {
-        throw new Error(`Erreur HTTP: ${response.status}`);
-      }
-      console.log(response.data);
+      if (response.status !== 200) throw new Error("Erreur IA");
+      onGoalsUpdated(response.data);
     } catch (error) {
-      console.error(
-        "Erreur lors de la génération de la recommandation:",
-        error,
-      );
-      throw error;
+      console.error("Erreur génération recommandation:", error);
     } finally {
       setIsLoading(false);
+      setIsModalOpen(false);
     }
   };
 
@@ -163,7 +114,6 @@ export default function GoalsList({
             key={goal._id}
             className="relative rounded-xl border border-gray-300 bg-white p-4 shadow-md dark:border-gray-700 dark:bg-gray-800 dark:text-white"
           >
-            {/* Edit icon */}
             <button
               className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-white"
               onClick={() => setSelectedGoal(goal)}
@@ -172,10 +122,7 @@ export default function GoalsList({
               <Pencil size={18} />
             </button>
 
-            {/* Content */}
-            <h3 className="mb-2 text-lg font-semibold text-gray-800 dark:text-white">
-              {goal.description}
-            </h3>
+            <h3 className="mb-2 text-lg font-semibold">{goal.description}</h3>
 
             <div className="flex items-center justify-between">
               <div className="flex flex-col items-center">
@@ -184,50 +131,56 @@ export default function GoalsList({
                     {goal.targetAmount}€
                   </span>
                 </div>
-                <span className="mt-1 text-sm text-gray-600 dark:text-gray-300">
-                  Objectif
-                </span>
+                <span className="mt-1 text-sm">Objectif</span>
               </div>
-
-              <div className="text-center text-sm text-gray-600 dark:text-gray-300">
+              <div className="text-center text-sm">
                 <span className="block font-medium">Date cible</span>
                 <span>{new Date(goal.targetDate).toLocaleDateString()}</span>
               </div>
             </div>
 
-            {/* AI recommendation icon */}
-            <div className="mt-4 flex justify-start gap-3">
+            <div className="mt-4 flex gap-3">
               <button
-                className="flex items-center gap-1 text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
-                title="Générer une recommandation par IA"
-                data-goal={goal}
-                onClick={(e) => handleOpenModal(e, goal)}
+                className="text-blue-500 hover:text-blue-700 dark:text-blue-400"
+                title="Générer une recommandation"
+                onClick={() => {
+                  setClickedGoal(goal);
+                  setIsModalOpen(true);
+                }}
               >
                 <Sparkles size={20} />
               </button>
               <button
-                className="flex items-center gap-1 text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
-                title="Consulter la recommandation"
-                onClick={() => setIsRecommendationModalOpen(true)}
+                className="text-blue-500 hover:text-blue-700 dark:text-blue-400"
+                title="Voir la recommandation"
+                onClick={() => {
+                  setClickedGoal(goal);
+                  setIsRecommendationModalOpen(true);
+                }}
               >
                 <Lightbulb size={20} />
               </button>
-              <RecommendationModal
-                isOpen={isRecommendationModalOpen}
-                onClose={() => setIsRecommendationModalOpen(false)}
-                goal={goal}
-              ></RecommendationModal>
             </div>
-            <ConfirmRecommendation
-              isOpen={isModalOpen}
-              onClose={handleCloseModal}
-              onConfirm={handleConfirmRecommendation}
-              isLoading={isLoading}
-            />
           </div>
         ))}
       </div>
-      {/* MODAL */}
+
+      {isRecommendationModalOpen && clickedGoal && (
+        <RecommendationModal
+          isOpen={isRecommendationModalOpen}
+          onClose={() => setIsRecommendationModalOpen(false)}
+          goal={clickedGoal}
+        />
+      )}
+      {isModalOpen && clickedGoal && (
+        <ConfirmRecommendation
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onConfirm={handleConfirmRecommendation}
+          isLoading={isLoading}
+        />
+      )}
+
       {selectedGoal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
           <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-lg dark:bg-gray-800 dark:text-white">

@@ -1,9 +1,9 @@
 import { useForm } from "react-hook-form";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Plus } from "lucide-react";
-
 import axios from "axios";
 import GoalsList, { Goal } from "./GoalsList";
+import api from "../../api";
 
 interface GoalFormValues {
   description: string;
@@ -17,10 +17,8 @@ interface GoalFormValues {
 
 export default function GoalManager() {
   const [showForm, setShowForm] = useState(false);
-  const [hasGoals, setHasGoals] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   const [goals, setGoals] = useState<Goal[]>([]);
-  // const hasGoals = goals.length > 0;
+  const [isLoading, setIsLoading] = useState(true);
 
   const {
     register,
@@ -29,97 +27,71 @@ export default function GoalManager() {
     formState: { errors },
   } = useForm<GoalFormValues>();
 
+  // ✅ Fetch géré dans le parent pour résoudre le bug F5
+  useEffect(() => {
+    const fetchGoals = async () => {
+      try {
+        const response = await api.get(
+          `${import.meta.env.VITE_API_BASE_URL}/goal/`,
+        );
+        if (response.status !== 200) throw new Error("Erreur de récupération");
+
+        setGoals(response.data);
+      } catch (error) {
+        console.error("Erreur lors du chargement des objectifs:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchGoals();
+  }, []);
+
   const onSubmit = async (data: GoalFormValues) => {
     try {
-      const newGoalEndpoint = "goal/";
       const response = await axios.post(
-        `${import.meta.env.VITE_API_BASE_URL}/${newGoalEndpoint}`,
+        `${import.meta.env.VITE_API_BASE_URL}/goal/`,
         data,
       );
 
       if (response.status !== 201)
         throw new Error("Erreur lors de la création de l'objectif.");
 
-      //   setHasGoals(true);
       reset();
       setShowForm(false);
-      setGoals((prevGoals) => {
-        return [...prevGoals, response.data];
-      });
+      setGoals((prev) => [...prev, response.data]);
     } catch (error) {
       console.error(error);
       alert("Une erreur est survenue.");
     }
   };
 
-  const handleGoalsFetched = useCallback(
-    (goals: Goal[]) => {
-      setGoals(goals);
-      setIsLoading(false);
-      console.log(goals);
-      if (goals.length > 0) {
-        setHasGoals(true);
-      }
-    },
-    [setGoals, setIsLoading, setHasGoals],
-  );
-
   const handleGoalsUpdated = useCallback((goal: Goal) => {
-    setGoals((prevGoals) => {
-      const exists = prevGoals.find((oldGoal) => oldGoal._id === goal._id);
-      if (exists) {
-        return prevGoals.map((oldGoal) =>
-          oldGoal._id === goal._id ? goal : oldGoal,
-        );
-      } else {
-        return [...prevGoals, goal];
-      }
-    });
+    setGoals((prev) => prev.map((g) => (g._id === goal._id ? goal : g)));
   }, []);
 
   const handleGoalsDeleted = useCallback((goal: Goal) => {
-    setGoals((prevGoals) => {
-      const exists = prevGoals.find(
-        (deletedGoal) => deletedGoal._id === goal._id,
-      );
-      if (exists) {
-        return prevGoals.filter((deletedGoal) => deletedGoal._id !== goal._id);
-      } else {
-        return [...prevGoals, goal];
-      }
-    });
+    setGoals((prev) => prev.filter((g) => g._id !== goal._id));
   }, []);
 
   return (
     <div className="relative min-h-screen p-4">
       {isLoading ? (
-        <div>
-          <div>Chargement...</div>
-          {/* Render GoalsList even while loading so it can fetch data */}
-          <div style={{ display: "none" }}>
-            <GoalsList
-              goals={goals}
-              onGoalsFetched={handleGoalsFetched}
-              onGoalsUpdated={handleGoalsUpdated}
-              onGoalsDeleted={handleGoalsDeleted}
-            />
-          </div>
+        <div className="mt-6 text-center text-gray-700 dark:text-white">
+          Chargement...
         </div>
-      ) : !hasGoals ? (
+      ) : goals.length === 0 ? (
         <div className="mx-auto mt-5 max-w-xl rounded-xl border border-gray-300 bg-white p-6 shadow-md dark:border-gray-700 dark:bg-gray-800">
           <p className="text-center text-lg text-gray-700 dark:text-white">
             Vous n'avez pas encore saisi d'objectifs.
           </p>
         </div>
       ) : (
-        <div className="text-gray-700 dark:text-white">
-          <GoalsList
-            goals={goals}
-            onGoalsFetched={handleGoalsFetched}
-            onGoalsUpdated={handleGoalsUpdated}
-            onGoalsDeleted={handleGoalsDeleted}
-          />
-        </div>
+        <GoalsList
+          goals={goals}
+          onGoalsUpdated={handleGoalsUpdated}
+          onGoalsDeleted={handleGoalsDeleted}
+        />
       )}
 
       <button
@@ -131,7 +103,7 @@ export default function GoalManager() {
       </button>
 
       {showForm && (
-        <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-auto backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
           <div className="mx-auto w-full max-w-lg rounded-xl bg-white p-8 shadow-md dark:bg-gray-800 dark:text-white">
             <h2 className="mb-4 text-xl font-semibold">Créer un objectif</h2>
             <form onSubmit={handleSubmit(onSubmit)}>
@@ -153,11 +125,6 @@ export default function GoalManager() {
                   {...register("targetAmount", { required: true, min: 1 })}
                   className="w-full rounded border p-2 dark:bg-gray-700"
                 />
-                {errors.targetAmount && (
-                  <p className="text-red-500">
-                    Le montant doit être supérieur à 0
-                  </p>
-                )}
               </div>
 
               <div className="mb-4">
