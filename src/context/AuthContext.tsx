@@ -109,6 +109,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Logout
   const logout = () => {
+    localStorage.removeItem("chatbot-messages");
     localStorage.removeItem("token");
     setToken(null);
     setUser(null);
