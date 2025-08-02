@@ -52,7 +52,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   // Check Token
   useEffect(() => {
     if (token && isTokenExpired(token)) {
-      console.log("Token expired, logging out.");
       logout();
     } else {
       setIsLoggedIn(!!token);
@@ -60,7 +59,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
     const intervalId = setInterval(() => {
       if (token && isTokenExpired(token)) {
-        console.log("Token expired, logging out (from interval).");
         logout();
       }
     }, 60000); // Check every minute
@@ -83,8 +81,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         setIsLoggedIn(true);
         localStorage.setItem("isLoggedIn", "true");
 
-        const user = jwtDecode(response.data.token);
-        console.log(user);
+        jwtDecode(response.data.token);
         const userInfoEndpoint = "user/user-info";
         const userInfo = await axios.get(
           `${import.meta.env.VITE_API_BASE_URL}/${userInfoEndpoint}`,
@@ -94,7 +91,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             },
           },
         );
-        console.log(userInfo);
         setUser(userInfo.data.user.firstname);
         localStorage.setItem("user", userInfo.data.user.firstname);
         navigate("/transaction");
