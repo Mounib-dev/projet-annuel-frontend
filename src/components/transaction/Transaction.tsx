@@ -30,7 +30,6 @@ const Transaction: React.FC = () => {
 
         if (response.status === 200) {
           const retrievedTransactions = response.data;
-          console.log(retrievedTransactions);
           setTransactions(retrievedTransactions);
         }
       } catch (error) {
