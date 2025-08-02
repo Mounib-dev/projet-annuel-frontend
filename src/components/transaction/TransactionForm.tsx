@@ -32,19 +32,26 @@ export type TransactionData = {
   date: string;
 };
 
+// Type strict pour une catégorie locale
 type Category = {
   id: string;
   label: string;
   icon: React.ReactNode;
 };
 
+// Type strict pour une catégorie venant de l'API
+type CategoryFromApi = {
+  _id: string;
+  title: string;
+  icon: string;
+};
 
 const iconMap: Record<string, React.ReactNode> = {
   martini: <Martini />,
   "credit-card": <CreditCard />,
-   "HomeIcon": <HomeIcon />,
+  HomeIcon: <HomeIcon />,
   "shopping-cart": <ShoppingCart />,
-  "GiftIcon": <GiftIcon />,
+  GiftIcon: <GiftIcon />,
   sport: <BicepsFlexed />,
   food: <Utensils />,
   transport: <BusFront />,
@@ -59,7 +66,7 @@ function capitalizeFirst(text: string) {
   return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
 }
 
-// 🎯 Catégories par défaut
+// Catégories par défaut
 const defaultCategories: Category[] = [
   { id: "sport", label: "Sport", icon: <BicepsFlexed /> },
   { id: "food", label: "Restaurant", icon: <Utensils /> },
@@ -108,7 +115,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ onFormSubmit }) => {
     const newTransactionEndpoint = "transaction/create";
     const response = await axios.post(
       `${import.meta.env.VITE_API_BASE_URL}/${newTransactionEndpoint}`,
-      data
+      data,
     );
     if (response.status === 201) {
       onFormSubmit(data);
@@ -134,19 +141,20 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ onFormSubmit }) => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await axios.get(
-          `${import.meta.env.VITE_API_BASE_URL}/category`
+        const response = await axios.get<CategoryFromApi[]>(
+          `${import.meta.env.VITE_API_BASE_URL}/category`,
         );
-        const categoriesFromAPI = response.data.map((cat: any) => ({
-          id: cat._id || cat.id,
+
+        const categoriesFromAPI: Category[] = response.data.map((cat) => ({
+          id: cat._id,
           label: capitalizeFirst(cat.title),
-          icon: iconMap[cat.icon] || <Info />, 
+          icon: iconMap[cat.icon] || <Info />,
         }));
 
         setCategories([...defaultCategories, ...categoriesFromAPI]);
       } catch (error) {
         console.error("Erreur lors du chargement des catégories :", error);
-        setCategories([...defaultCategories]); 
+        setCategories([...defaultCategories]);
       }
     };
 
@@ -254,9 +262,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ onFormSubmit }) => {
               </p>
             )}
             <p className="mt-2 text-xl text-green-500">
-              {
-                categories.find((cat) => cat.id === selectedCategory)?.label
-              }
+              {categories.find((cat) => cat.id === selectedCategory)?.label}
             </p>
           </div>
         )}
@@ -282,9 +288,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ onFormSubmit }) => {
             className="mt-2 w-full rounded-md border bg-gray-50 px-4 py-2 focus:ring-2 focus:ring-green-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
           />
           {errors.amount && (
-            <p className="mt-1 text-sm text-red-500">
-              {errors.amount.message}
-            </p>
+            <p className="mt-1 text-sm text-red-500">{errors.amount.message}</p>
           )}
         </div>
 
@@ -326,16 +330,14 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ onFormSubmit }) => {
             className="mt-2 w-full rounded-md border bg-gray-50 px-4 py-2 focus:ring-2 focus:ring-green-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
           />
           {errors.date && (
-            <p className="mt-1 text-sm text-red-500">
-              {errors.date.message}
-            </p>
+            <p className="mt-1 text-sm text-red-500">{errors.date.message}</p>
           )}
         </div>
 
         {/* Bouton Submit */}
         <button
           type="submit"
-          className="w-full rounded-md bg-green-600 px-4 py-2 text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-400 dark:bg-green-500 dark:hover:bg-green-600"
+          className="w-full rounded-md bg-green-600 px-4 py-2 text-white hover:bg-green-700 focus:ring-2 focus:ring-green-400 focus:outline-none dark:bg-green-500 dark:hover:bg-green-600"
         >
           Enregistrer
         </button>
