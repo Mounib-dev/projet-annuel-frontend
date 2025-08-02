@@ -47,7 +47,8 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       <Footer />
 
       {/* Chatbot flottant accessible sur toutes les pages */}
-      <FloatingChatbot />
+
+      {isLoggedIn && <FloatingChatbot />}
     </div>
   );
 };
