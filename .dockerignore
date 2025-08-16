@@ -1,0 +1,23 @@
+# Node modules et caches
+node_modules
+npm-debug.log
+
+# Build outputs
+dist
+build
+
+# Git
+.git
+.gitignore
+
+# IDE / OS junk
+.DS_Store
+.vscode
+.idea
+*.swp
+
+# Docker / CI
+Dockerfile
+docker-compose.yml
+
+
