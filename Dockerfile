@@ -16,14 +16,15 @@ RUN npm run build
 FROM nginx:1.27-alpine AS runtime
 
 COPY --from=builder /app/dist /usr/share/nginx/html
-
 COPY deploy/nginx.conf.template /etc/nginx/templates/default.conf.template
 COPY deploy/docker-entrypoint.sh /docker-entrypoint.sh
-RUN chmod +x /docker-entrypoint.sh
 
-RUN apk add --no-cache gettext
+RUN apk add --no-cache gettext dos2unix \
+  && dos2unix /docker-entrypoint.sh \
+  && chmod +x /docker-entrypoint.sh
 
 ENV PORT=8080
 EXPOSE 8080
-
 CMD ["/docker-entrypoint.sh"]
+
+
