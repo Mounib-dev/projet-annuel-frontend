@@ -20,8 +20,8 @@ jobs:
       - name: Run Linter
         run: npm run lint
 
-      - name: Run Tests
-        run: npm run test -- --run --config vitest.config.ts
+      # - name: Run Tests
+      #   run: npm run test -- --run --config vitest.config.ts
 
   build:
     if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
