@@ -3,3 +3,37 @@
 @plugin "tailwind-scrollbar";
 
 @custom-variant dark (&:where(.dark, .dark *));
+
+/* === Variables CSS pour les charts === */
+:root {
+  /* axes + textes de tooltip */
+  --chart-axis: #334155; /* slate-700 */
+  --chart-tooltip-bg: #ffffff; /* white */
+  --chart-tooltip-fg: #0f172a; /* slate-900 */
+
+  /* courbes */
+  --chart-income: #10b981; /* emerald-500 */
+  --chart-expense: #ef4444; /* red-500 */
+
+  /* parts du camembert */
+  --chart-pie-1: #b91c1c; /* red-700 */
+  --chart-pie-2: #f97316; /* orange-500 */
+  --chart-pie-3: #f59e0b; /* amber-500 */
+  --chart-pie-4: #16a34a; /* green-600 */
+  --chart-pie-5: #2563eb; /* blue-600 */
+}
+
+.dark {
+  --chart-axis: #e2e8f0; /* slate-200 */
+  --chart-tooltip-bg: #1f2937; /* slate-800 */
+  --chart-tooltip-fg: #f1f5f9; /* slate-100 */
+
+  --chart-income: #34d399; /* emerald-400 */
+  --chart-expense: #f87171; /* red-400 */
+
+  --chart-pie-1: #f87171; /* red-400 */
+  --chart-pie-2: #fdba74; /* orange-300 */
+  --chart-pie-3: #fcd34d; /* amber-300 */
+  --chart-pie-4: #4ade80; /* green-400 */
+  --chart-pie-5: #60a5fa; /* blue-400 */
+}

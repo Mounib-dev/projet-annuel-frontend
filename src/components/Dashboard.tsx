@@ -18,16 +18,14 @@ import {
   Tooltip,
   Legend,
 } from "recharts";
-import { jsPDF } from "jspdf";
-import autoTable from "jspdf-autotable";
-import * as XLSX from "xlsx";
-import { saveAs } from "file-saver";
 import api from "../api";
 import { Transaction } from "../types/transaction";
 import { FilterType, Totals } from "../types/dashboard";
+import { exportPDF, exportExcel } from "../utils/exporters";
 
 const ITEMS_PER_PAGE = 10;
 
+/* --------- Helpers (on garde local) --------- */
 const filterTransactions = (
   transactions: Transaction[],
   filter: FilterType,
@@ -82,74 +80,16 @@ const getMonthlyStats = (transactions: Transaction[], selectedDate: Date) => {
     return { name: label, Revenus: income, Dépenses: expense };
   });
 };
-
-const exportPDF = (
-  filteredTransactions: Transaction[],
-  totals: Totals,
-  currentLabel: string,
-) => {
-  const doc = new jsPDF();
-  doc.setFontSize(16);
-  doc.text(`Résumé Budgétaire - ${currentLabel}`, 10, 15);
-  doc.setFontSize(12);
-  doc.text(`Revenus: ${totals.totalIncome.toFixed(2)} €`, 10, 30);
-  doc.text(`Dépenses: ${totals.totalExpense.toFixed(2)} €`, 10, 40);
-  doc.text(`Solde: ${totals.balance.toFixed(2)} €`, 10, 50);
-
-  const rows = filteredTransactions.map((tx) => [
-    tx.description,
-    tx.type,
-    tx.amount.toFixed(2),
-    format(new Date(tx.date), "dd/MM/yyyy"),
-  ]);
-  autoTable(doc, {
-    head: [["Description", "Type", "Montant (€)", "Date"]],
-    body: rows,
-    startY: 60,
-    theme: "striped",
-    headStyles: { fillColor: [40, 40, 40] },
-    alternateRowStyles: { fillColor: [245, 245, 245] },
-  });
-
-  doc.save(`budget-${currentLabel.replace(/\s/g, "_")}.pdf`);
-};
-
-const exportExcel = (
-  filteredTransactions: Transaction[],
-  totals: Totals,
-  currentLabel: string,
-) => {
-  const wsData = [
-    [`Résumé Budgétaire - ${currentLabel}`],
-    [`Revenus: ${totals.totalIncome.toFixed(2)} €`],
-    [`Dépenses: ${totals.totalExpense.toFixed(2)} €`],
-    [`Solde: ${totals.balance.toFixed(2)} €`],
-    [],
-    ["Description", "Type", "Montant (€)", "Date"],
-    ...filteredTransactions.map((tx) => [
-      tx.description,
-      tx.type,
-      tx.amount.toFixed(2),
-      format(new Date(tx.date), "dd/MM/yyyy"),
-    ]),
-  ];
-
-  const ws = XLSX.utils.aoa_to_sheet(wsData);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Budget");
-  const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" });
-  const blob = new Blob([wbout], { type: "application/octet-stream" });
-  saveAs(blob, `budget-${currentLabel.replace(/\s/g, "_")}.xlsx`);
-};
+/* -------------------------------------------- */
 
 const Dashboard = () => {
-  const [transactions, setTransactions] = useState([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [filter, setFilter] = useState<FilterType>("month");
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [currentTime, setCurrentTime] = useState(new Date());
   const [currentPage, setCurrentPage] = useState(1);
-  const [isDarkMode, setIsDarkMode] = useState(false);
 
+  /* fetch data */
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -164,28 +104,18 @@ const Dashboard = () => {
     fetchData();
   }, []);
 
+  /* horloge */
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
+  /* reset pagination on filter/date change */
   useEffect(() => {
     setCurrentPage(1);
   }, [filter, selectedDate]);
 
-  // Détecter le thème global (dark mode activé ?)
-  useEffect(() => {
-    const updateTheme = () => {
-      setIsDarkMode(document.documentElement.classList.contains("dark"));
-    };
-    updateTheme();
-    const observer = new MutationObserver(updateTheme);
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ["class"],
-    });
-    return () => observer.disconnect();
-  }, []);
+  // plus d'useEffect pour le thème : Tailwind v4 + CSS vars s'occupent de tout
 
   const filteredTransactions = filterTransactions(
     transactions,
@@ -208,7 +138,15 @@ const Dashboard = () => {
     name: tx.description,
     value: Number(tx.amount),
   }));
-  const COLORS = ["#D32F2F", "#F57C00", "#FBC02D", "#388E3C", "#1976D2"];
+
+  // Couleurs du camembert via variables CSS + fallback
+  const PIE_COLORS = [
+    "var(--chart-pie-1, #b91c1c)", // red-700
+    "var(--chart-pie-2, #f97316)", // orange-500
+    "var(--chart-pie-3, #f59e0b)", // amber-500
+    "var(--chart-pie-4, #16a34a)", // green-600
+    "var(--chart-pie-5, #2563eb)", // blue-600
+  ];
 
   const summaryMessage =
     balance < 0
@@ -285,7 +223,13 @@ const Dashboard = () => {
               onClick={() =>
                 exportPDF(
                   filteredTransactions,
-                  { income, expense, totalIncome, totalExpense, balance },
+                  {
+                    income,
+                    expense,
+                    totalIncome,
+                    totalExpense,
+                    balance,
+                  } as Totals,
                   currentLabel,
                 )
               }
@@ -298,7 +242,13 @@ const Dashboard = () => {
               onClick={() =>
                 exportExcel(
                   filteredTransactions,
-                  { income, expense, totalIncome, totalExpense, balance },
+                  {
+                    income,
+                    expense,
+                    totalIncome,
+                    totalExpense,
+                    balance,
+                  } as Totals,
                   currentLabel,
                 )
               }
@@ -383,20 +333,31 @@ const Dashboard = () => {
             </h3>
             <ResponsiveContainer width="100%" height={320}>
               <LineChart data={lineChartData}>
-                <XAxis dataKey="name" stroke={isDarkMode ? "#ddd" : "#333"} />
-                <YAxis stroke={isDarkMode ? "#ddd" : "#333"} />
+                <XAxis dataKey="name" stroke="var(--chart-axis, #334155)" />
+                <YAxis stroke="var(--chart-axis, #334155)" />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: isDarkMode ? "#222" : "#fff",
-                    color: isDarkMode ? "#ddd" : "#333",
+                    backgroundColor: "var(--chart-tooltip-bg, #ffffff)",
+                    color: "var(--chart-tooltip-fg, #0f172a)",
+                    border: "1px solid var(--chart-axis, #334155)",
                   }}
                 />
                 <Legend />
-                <Line type="monotone" dataKey="Revenus" stroke="#10b981" />
-                <Line type="monotone" dataKey="Dépenses" stroke="#ef4444" />
+                <Line
+                  type="monotone"
+                  dataKey="Revenus"
+                  stroke="var(--chart-income, #10b981)"
+                />
+                <Line
+                  type="monotone"
+                  dataKey="Dépenses"
+                  stroke="var(--chart-expense, #ef4444)"
+                />
               </LineChart>
             </ResponsiveContainer>
           </div>
+
+          {/* Pie Chart */}
           <div>
             <h3 className="mb-4 text-xl font-semibold">Top 5 Dépenses</h3>
             {pieData.length > 0 ? (
@@ -414,14 +375,15 @@ const Dashboard = () => {
                     {pieData.map((_, index) => (
                       <Cell
                         key={`cell-${index}`}
-                        fill={COLORS[index % COLORS.length]}
+                        fill={PIE_COLORS[index % PIE_COLORS.length]}
                       />
                     ))}
                   </Pie>
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: isDarkMode ? "#222" : "#fff",
-                      color: isDarkMode ? "#ddd" : "#333",
+                      backgroundColor: "var(--chart-tooltip-bg, #ffffff)",
+                      color: "var(--chart-tooltip-fg, #0f172a)",
+                      border: "1px solid var(--chart-axis, #334155)",
                     }}
                   />
                 </PieChart>
@@ -433,7 +395,7 @@ const Dashboard = () => {
         </section>
 
         {/* Transactions */}
-        <section id="trasactions">
+        <section id="transactions">
           <h3 className="mb-4 text-xl font-semibold">
             Historique des Transactions
           </h3>
@@ -469,7 +431,7 @@ const Dashboard = () => {
                   disabled={currentPage === 1}
                   className={`rounded px-4 py-2 ${
                     currentPage === 1
-                      ? "bg-gray-300"
+                      ? "bg-gray-300 text-gray-600"
                       : "bg-purple-600 text-white hover:bg-purple-700"
                   }`}
                 >
@@ -485,7 +447,7 @@ const Dashboard = () => {
                   disabled={currentPage === totalPages || totalPages === 0}
                   className={`rounded px-4 py-2 ${
                     currentPage === totalPages || totalPages === 0
-                      ? "bg-gray-300"
+                      ? "bg-gray-300 text-gray-600"
                       : "bg-purple-600 text-white hover:bg-purple-700"
                   }`}
                 >
