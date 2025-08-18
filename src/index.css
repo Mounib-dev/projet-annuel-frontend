@@ -4,36 +4,38 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* === Variables CSS pour les charts === */
+/* === Variables CSS adoucies pour les charts === */
 :root {
-  /* axes + textes de tooltip */
-  --chart-axis: #334155; /* slate-700 */
-  --chart-tooltip-bg: #ffffff; /* white */
-  --chart-tooltip-fg: #0f172a; /* slate-900 */
+  /* axes + grid + tooltip */
+  --chart-axis: #475569; /* slate-600, lisible sans être noir */
+  --chart-grid: #e2e8f0; /* slate-200 */
+  --chart-tooltip-bg: #ffffff; /* blanc */
+  --chart-tooltip-fg: #1f2937; /* slate-800, pas noir */
 
-  /* courbes */
+  /* courbes (garde vert/rouge, versions plus douces) */
   --chart-income: #10b981; /* emerald-500 */
-  --chart-expense: #ef4444; /* red-500 */
+  --chart-expense: #f43f5e; /* rose-500 (rouge doux) */
 
-  /* parts du camembert */
-  --chart-pie-1: #b91c1c; /* red-700 */
-  --chart-pie-2: #f97316; /* orange-500 */
-  --chart-pie-3: #f59e0b; /* amber-500 */
-  --chart-pie-4: #16a34a; /* green-600 */
-  --chart-pie-5: #2563eb; /* blue-600 */
+  /* parts du camembert (douces) */
+  --chart-pie-1: #f43f5e; /* rose-500 */
+  --chart-pie-2: #fb923c; /* orange-400 */
+  --chart-pie-3: #fbbf24; /* amber-400 */
+  --chart-pie-4: #10b981; /* emerald-500 */
+  --chart-pie-5: #0ea5e9; /* sky-500 */
 }
 
 .dark {
-  --chart-axis: #e2e8f0; /* slate-200 */
-  --chart-tooltip-bg: #1f2937; /* slate-800 */
-  --chart-tooltip-fg: #f1f5f9; /* slate-100 */
+  --chart-axis: #cbd5e1; /* slate-300 */
+  --chart-grid: #334155; /* slate-700 */
+  --chart-tooltip-bg: #1f2937; /* slate-800 (pas noir) */
+  --chart-tooltip-fg: #e5e7eb; /* gray-200 */
 
   --chart-income: #34d399; /* emerald-400 */
-  --chart-expense: #f87171; /* red-400 */
+  --chart-expense: #fb7185; /* rose-400 */
 
-  --chart-pie-1: #f87171; /* red-400 */
+  --chart-pie-1: #fb7185; /* rose-400 */
   --chart-pie-2: #fdba74; /* orange-300 */
   --chart-pie-3: #fcd34d; /* amber-300 */
-  --chart-pie-4: #4ade80; /* green-400 */
-  --chart-pie-5: #60a5fa; /* blue-400 */
+  --chart-pie-4: #34d399; /* emerald-400 */
+  --chart-pie-5: #38bdf8; /* sky-400 */
 }
