@@ -86,14 +86,14 @@ function ChatBot() {
     <div className="flex h-screen flex-col items-center justify-center bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-white">
       <div className="w-full max-w-2xl rounded-lg bg-white p-6 shadow-lg dark:bg-gray-800">
         <div className="mb-4 flex items-center justify-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-500 text-white dark:bg-green-400">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500 text-white dark:bg-emerald-400">
             <Bot size={24} />
           </div>
-          <h2 className="text-2xl font-bold text-green-600 dark:text-green-400">
+          <h2 className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
             Finance Chatbot
           </h2>
           <DollarSign
-            className="text-green-500 dark:text-green-400"
+            className="text-emerald-500 dark:text-emerald-400"
             size={24}
           />
         </div>
@@ -106,7 +106,7 @@ function ChatBot() {
               key={i}
               className={`my-2 max-w-xs rounded-lg p-3 text-sm sm:max-w-sm ${
                 msg.role === "user"
-                  ? "ml-auto bg-green-500 text-right text-white dark:bg-green-600"
+                  ? "ml-auto bg-emerald-500 text-right text-white dark:bg-emerald-600"
                   : "bg-gray-200 text-gray-800 dark:bg-gray-600 dark:text-white"
               }`}
             >
@@ -123,7 +123,7 @@ function ChatBot() {
           />
           <button
             type="submit"
-            className="rounded-md bg-green-500 px-4 py-3 text-white hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700"
+            className="rounded-md bg-emerald-500 px-4 py-3 text-white hover:bg-emerald-600 dark:bg-emerald-600 dark:hover:bg-emerald-700"
           >
             {loading ? "Thinking..." : "Send"}
           </button>

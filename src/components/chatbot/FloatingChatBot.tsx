@@ -120,7 +120,7 @@ function FloatingChatBot() {
       {/* ✅ Bouton flottant */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`fixed ${buttonPosition} right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-green-500 text-white shadow-lg transition hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700`}
+        className={`fixed ${buttonPosition} right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-600 text-white shadow-lg transition hover:bg-emerald-700 dark:bg-emerald-600 dark:hover:bg-emerald-700`}
       >
         {isOpen ? <X size={24} /> : <MessageCircle size={24} />}
       </button>
@@ -129,7 +129,7 @@ function FloatingChatBot() {
       {isOpen && (
         <div className="fixed right-6 bottom-20 z-50 flex max-h-[500px] w-80 flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
           {/* Header */}
-          <div className="flex items-center justify-between bg-green-500 px-4 py-3 text-white dark:bg-green-600">
+          <div className="flex items-center justify-between bg-emerald-500 px-4 py-3 text-white dark:bg-emerald-600">
             <div className="flex items-center gap-2">
               <Bot size={20} />
               <span className="font-semibold">Finance Chatbot</span>
@@ -163,7 +163,7 @@ function FloatingChatBot() {
                 key={index}
                 className={`my-2 max-w-[80%] rounded-lg p-2 text-sm ${
                   msg.role === "user"
-                    ? "ml-auto bg-green-500 text-white dark:bg-green-600"
+                    ? "ml-auto bg-emerald-500 text-white dark:bg-emerald-600"
                     : "bg-gray-200 text-gray-800 dark:bg-gray-600 dark:text-white"
                 }`}
               >
@@ -186,7 +186,7 @@ function FloatingChatBot() {
             />
             <button
               type="submit"
-              className="rounded-md bg-green-500 px-3 py-2 text-white hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700"
+              className="rounded-md bg-emerald-500 px-3 py-2 text-white hover:bg-emerald-600 dark:bg-emerald-600 dark:hover:bg-emerald-700"
               disabled={loading}
             >
               {loading ? "..." : "Send"}

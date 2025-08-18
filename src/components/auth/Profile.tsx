@@ -60,20 +60,20 @@ const Profile = () => {
     <div className="flex min-h-screen items-center justify-center bg-white px-4 py-10 dark:bg-[#0f172a]">
       <div className="w-full max-w-lg rounded-3xl bg-white p-8 shadow-2xl transition-all duration-300 dark:bg-gray-800">
         <div className="flex flex-col items-center space-y-6 text-center">
-          <div className="rounded-full bg-green-100 p-3 dark:bg-green-900">
-            <UserCircle2 className="h-20 w-20 text-green-600 dark:text-green-300" />
+          <div className="rounded-full bg-emerald-100 p-3 dark:bg-emerald-900">
+            <UserCircle2 className="h-20 w-20 text-emerald-600 dark:text-emerald-300" />
           </div>
           <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
             {profile.firstname} {profile.lastname}
           </h2>
-          <div className="mt-2 inline-flex items-center gap-2 rounded-full bg-green-100 px-4 py-1 text-sm text-green-700 dark:bg-green-800 dark:text-green-200">
+          <div className="mt-2 inline-flex items-center gap-2 rounded-full bg-emerald-100 px-4 py-1 text-sm text-emerald-700 dark:bg-emerald-800 dark:text-emerald-200">
             <ShieldCheck size={16} />
             <span className="capitalize">{profile.role}</span>
           </div>
 
           <div className="mt-6 w-full space-y-4 text-left">
             <div className="flex items-center gap-3">
-              <Mail className="text-green-500" />
+              <Mail className="text-emerald-500" />
               <span className="text-gray-700 dark:text-gray-300">
                 {profile.email}
               </span>
@@ -82,9 +82,9 @@ const Profile = () => {
 
           <button
             onClick={logout}
-            className="mt-8 inline-flex items-center gap-2 rounded-full bg-red-500 px-6 py-2 text-white transition hover:bg-red-600 focus:ring-2 focus:ring-red-300 focus:outline-none dark:focus:ring-red-800"
+            className="mt-8 inline-flex items-center gap-2 rounded-xl bg-red-200 px-6 py-2 text-red-800 ring-1 shadow-sm ring-red-300 transition ring-inset hover:bg-red-300 focus:ring-2 focus:ring-red-400 focus:outline-none dark:bg-red-900/40 dark:text-red-300 dark:ring-red-700 dark:hover:bg-red-900/60 dark:focus:ring-red-600"
           >
-            <LogOut size={18} />
+            <LogOut className="h-5 w-5" />
             Déconnexion
           </button>
         </div>

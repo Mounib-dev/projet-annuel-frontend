@@ -96,7 +96,7 @@ export default function GoalManager() {
 
       <button
         onClick={() => setShowForm(true)}
-        className="fixed right-6 bottom-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-green-600 text-white shadow-md hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600"
+        className="fixed right-6 bottom-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-600 text-white shadow-md hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600"
         aria-label="Ajouter un objectif"
       >
         <Plus />
@@ -168,7 +168,7 @@ export default function GoalManager() {
                 </button>
                 <button
                   type="submit"
-                  className="rounded bg-green-600 px-4 py-2 text-white hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600"
+                  className="rounded bg-emerald-600 px-4 py-2 text-white hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600"
                 >
                   Créer
                 </button>

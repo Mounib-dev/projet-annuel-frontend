@@ -55,7 +55,7 @@ const Register: React.FC = () => {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-r from-green-400 to-green-600 p-4 dark:from-gray-900 dark:to-gray-700">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-r from-emerald-400 to-emerald-600 p-4 dark:from-gray-900 dark:to-gray-700">
       <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-lg dark:bg-gray-800">
         {/* Title */}
         <h2 className="text-center text-2xl font-bold text-gray-800 dark:text-white">
@@ -65,7 +65,7 @@ const Register: React.FC = () => {
         {/* Form */}
         <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
           {feedbackMessage && (
-            <p className="text-center text-green-500 transition">
+            <p className="text-center text-emerald-500 transition">
               {feedbackMessage}
             </p>
           )}
@@ -81,7 +81,7 @@ const Register: React.FC = () => {
               value={formData.firstname}
               onChange={handleChange}
               required
-              className="w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2 text-gray-900 focus:ring-2 focus:ring-green-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+              className="w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2 text-gray-900 focus:ring-2 focus:ring-emerald-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             />
           </div>
           {/* Last Name */}
@@ -96,7 +96,7 @@ const Register: React.FC = () => {
               value={formData.lastname}
               onChange={handleChange}
               required
-              className="w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2 text-gray-900 focus:ring-2 focus:ring-green-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+              className="w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2 text-gray-900 focus:ring-2 focus:ring-emerald-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             />
           </div>
           {/* Email */}
@@ -111,7 +111,7 @@ const Register: React.FC = () => {
               value={formData.email}
               onChange={handleChange}
               required
-              className="w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2 text-gray-900 focus:ring-2 focus:ring-green-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+              className="w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2 text-gray-900 focus:ring-2 focus:ring-emerald-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             />
           </div>
           {/* Password */}
@@ -126,7 +126,7 @@ const Register: React.FC = () => {
               value={formData.password}
               onChange={handleChange}
               required
-              className="w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2 text-gray-900 focus:ring-2 focus:ring-green-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+              className="w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2 text-gray-900 focus:ring-2 focus:ring-emerald-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             />
           </div>
           {/* Confirm Password */}
@@ -141,13 +141,13 @@ const Register: React.FC = () => {
               value={formData.confirmPassword}
               onChange={handleChange}
               required
-              className="w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2 text-gray-900 focus:ring-2 focus:ring-green-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+              className="w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2 text-gray-900 focus:ring-2 focus:ring-emerald-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             />
           </div>
           {/* Submit Button */}
           <button
             type="submit"
-            className="w-full rounded-lg bg-green-500 py-2 font-semibold text-white transition duration-300 hover:bg-green-600"
+            className="w-full rounded-lg bg-emerald-500 py-2 font-semibold text-white transition duration-300 hover:bg-emerald-600"
           >
             S'inscrire
           </button>
@@ -158,7 +158,7 @@ const Register: React.FC = () => {
           Déjà inscrit ?{" "}
           <Link
             to="/login"
-            className="font-semibold text-green-700 hover:underline dark:text-green-400"
+            className="font-semibold text-emerald-700 hover:underline dark:text-emerald-400"
           >
             Connexion
           </Link>
