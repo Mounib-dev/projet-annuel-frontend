@@ -22,8 +22,10 @@ import {
   YAxis,
   Tooltip,
   Legend,
-  CartesianGrid,
+  Sector,
 } from "recharts";
+import type { TooltipProps } from "recharts";
+import type { PieSectorDataItem } from "recharts/types/polar/Pie";
 import api from "../api";
 import { Transaction } from "../types/transaction";
 import { FilterType, Totals } from "../types/dashboard";
@@ -140,21 +142,92 @@ const buildMonthSeries = (transactions: Transaction[], selectedDate: Date) => {
 };
 /* -------------------------------------------- */
 
+/* Tooltip customisé (format FR + €) */
+const CustomTooltip = ({
+  active,
+  payload,
+  label,
+}: TooltipProps<number, string>) => {
+  if (!active || !payload || payload.length === 0) return null;
+
+  return (
+    <div
+      className="rounded-lg border p-3 text-sm shadow"
+      style={{
+        backgroundColor: "var(--chart-tooltip-bg, #ffffff)",
+        color: "var(--chart-tooltip-fg, #1f2937)",
+        borderColor: "var(--chart-axis, #475569)",
+      }}
+    >
+      {label !== undefined && <div className="mb-1 font-medium">{label}</div>}
+      <ul className="space-y-0.5">
+        {payload.map((item, idx) => (
+          <li key={idx} className="flex items-center gap-2">
+            <span
+              className="inline-block h-2.5 w-2.5 rounded-full"
+              style={{ background: item.color as string }}
+            />
+            <span className="opacity-80">{String(item.name)} :</span>
+            <span className="font-semibold">
+              {typeof item.value === "number"
+                ? `${item.value.toLocaleString("fr-FR", {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 2,
+                  })} €`
+                : String(item.value)}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+};
+
+/* Tranche active du camembert (compat Recharts) */
+const renderActiveSlice = (props: unknown): JSX.Element => {
+  const p = props as PieSectorDataItem & { fill?: string };
+
+  const cx = (p.cx ?? 0) as number;
+  const cy = (p.cy ?? 0) as number;
+  const innerRadius = (p.innerRadius ?? 0) as number;
+  const outerRadius = (p.outerRadius ?? 0) as number;
+  const startAngle = (p.startAngle ?? 0) as number;
+  const endAngle = (p.endAngle ?? 0) as number;
+  const fill = (p.fill ?? "#000") as string;
+
+  return (
+    <g>
+      <Sector
+        cx={cx}
+        cy={cy}
+        innerRadius={innerRadius}
+        outerRadius={outerRadius + 6}
+        startAngle={startAngle}
+        endAngle={endAngle}
+        fill={fill}
+        stroke="var(--chart-axis, #475569)"
+        strokeOpacity={0.15}
+        strokeWidth={2}
+      />
+    </g>
+  );
+};
+
 const Dashboard = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [filter, setFilter] = useState<FilterType>("month");
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [currentTime, setCurrentTime] = useState(new Date());
-  const [currentPage, setCurrentPage] = useState(1);
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [currentTime, setCurrentTime] = useState<Date>(new Date());
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [activePieIndex, setActivePieIndex] = useState<number>(-1);
 
-  /* fetch data */
   useEffect(() => {
     const fetchData = async () => {
       try {
         const res = await api.get(
           `${import.meta.env.VITE_API_BASE_URL}/transaction/list`,
         );
-        setTransactions(res.data);
+        setTransactions(res.data as Transaction[]);
       } catch (error) {
         console.error(error);
       }
@@ -162,18 +235,15 @@ const Dashboard = () => {
     fetchData();
   }, []);
 
-  /* horloge */
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
-  /* reset pagination on filter/date change */
   useEffect(() => {
     setCurrentPage(1);
   }, [filter, selectedDate]);
 
-  // === Filtrage selon période ===
   const filteredTransactions = filterTransactions(
     transactions,
     filter,
@@ -196,21 +266,18 @@ const Dashboard = () => {
     value: Number(tx.amount),
   }));
 
-  // Couleurs du camembert via variables CSS + fallback
   const PIE_COLORS = [
-    "var(--chart-pie-1, #f43f5e)", // rose-500
-    "var(--chart-pie-2, #fb923c)", // orange-400
-    "var(--chart-pie-3, #fbbf24)", // amber-400
-    "var(--chart-pie-4, #10b981)", // emerald-500
-    "var(--chart-pie-5, #0ea5e9)", // sky-500
+    "var(--chart-pie-1, #f43f5e)",
+    "var(--chart-pie-2, #fb923c)",
+    "var(--chart-pie-3, #fbbf24)",
+    "var(--chart-pie-4, #10b981)",
+    "var(--chart-pie-5, #0ea5e9)",
   ];
 
-  // === Libellé de période (FR) ===
   const currentLabel =
     filter === "week"
       ? (() => {
           const { start, end } = getWeekRange(selectedDate);
-          // Affiche la plage en FR : 17/08/2025 au 23/08/2025
           return `Semaine du ${format(start, "dd/MM/yyyy", { locale: fr })} au ${format(
             end,
             "dd/MM/yyyy",
@@ -218,12 +285,9 @@ const Dashboard = () => {
           )}`;
         })()
       : filter === "month"
-        ? // Mois en toutes lettres en FR (ex: "août 2025")
-          format(selectedDate, "MMMM yyyy", { locale: fr })
-        : // Année
-          format(selectedDate, "yyyy", { locale: fr });
+        ? format(selectedDate, "MMMM yyyy", { locale: fr })
+        : format(selectedDate, "yyyy", { locale: fr });
 
-  // === Données Graphique lignes ===
   const lineChartData =
     filter === "year"
       ? getMonthlyStats(transactions, selectedDate)
@@ -231,10 +295,8 @@ const Dashboard = () => {
         ? buildMonthSeries(transactions, selectedDate)
         : buildWeekSeries(transactions, selectedDate);
 
-  // === Handlers pour inputs adaptatifs ===
   const handleFilterChange = (f: FilterType) => setFilter(f);
 
-  // <input type="week"> renvoie 'YYYY-Www'
   const weekValue = (() => {
     const y = selectedDate.getFullYear();
     const ww = String(getISOWeek(selectedDate)).padStart(2, "0");
@@ -242,7 +304,6 @@ const Dashboard = () => {
   })();
 
   const handleWeekChange = (value: string) => {
-    // value ex: "2025-W34"
     const [yStr, wStr] = value.split("-W");
     const year = Number(yStr);
     const week = Number(wStr);
@@ -252,16 +313,14 @@ const Dashboard = () => {
     setSelectedDate(target);
   };
 
-  // <input type="month"> renvoie 'YYYY-MM'
   const monthValue = format(selectedDate, "yyyy-MM");
   const handleMonthChange = (value: string) => {
     const [yStr, mStr] = value.split("-");
     const year = Number(yStr);
-    const month = Number(mStr) - 1; // 0-based
+    const month = Number(mStr) - 1;
     setSelectedDate(new Date(year, month, 1));
   };
 
-  // Année : number
   const yearValue = selectedDate.getFullYear();
   const handleYearChange = (value: string) => {
     const year = Number(value) || new Date().getFullYear();
@@ -320,7 +379,7 @@ const Dashboard = () => {
           Heure actuelle : {format(currentTime, "HH:mm:ss")}
         </p>
 
-        {/* Filters + Date Picker adaptatif */}
+        {/* Filtres + date picker */}
         <section className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center">
           <select
             value={filter}
@@ -362,10 +421,10 @@ const Dashboard = () => {
           )}
         </section>
 
-        {/* Period Label */}
+        {/* Libellé période */}
         <h2 className="mb-6 text-xl font-semibold">Période : {currentLabel}</h2>
 
-        {/* Totals */}
+        {/* Totaux */}
         <section className="mb-8 grid grid-cols-1 gap-6 sm:grid-cols-3">
           <div className="flex flex-col items-center rounded-xl bg-emerald-50 p-6 text-emerald-700 ring-1 shadow-sm ring-emerald-200 ring-inset dark:bg-emerald-900/30 dark:text-emerald-300 dark:ring-emerald-800">
             <span className="mb-1 text-lg font-bold">Revenus</span>
@@ -389,7 +448,7 @@ const Dashboard = () => {
           </div>
         </section>
 
-        {/* Summary */}
+        {/* Résumé */}
         <section
           className={`mb-8 rounded-xl border px-6 py-4 ${
             balance >= 0
@@ -412,7 +471,7 @@ const Dashboard = () => {
           </p>
         </section>
 
-        {/* Charts  */}
+        {/* Graphiques */}
         <section className="mb-12 grid grid-cols-1 gap-10 md:grid-cols-2">
           {/* Line Chart */}
           <div>
@@ -421,27 +480,15 @@ const Dashboard = () => {
             </h3>
             <ResponsiveContainer width="100%" height={320}>
               <LineChart data={lineChartData}>
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke="var(--chart-grid, #e2e8f0)"
-                />
                 <XAxis dataKey="name" stroke="var(--chart-axis, #475569)" />
                 <YAxis stroke="var(--chart-axis, #475569)" />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "var(--chart-tooltip-bg, #ffffff)",
-                    color: "var(--chart-tooltip-fg, #1f2937)",
-                    border: "1px solid var(--chart-axis, #475569)",
-                    borderRadius: 8,
-                    boxShadow: "0 6px 18px rgba(0,0,0,0.08)",
-                  }}
-                />
+                <Tooltip content={<CustomTooltip />} />
                 <Legend />
                 <Line
                   type="monotoneX"
                   dataKey="Revenus"
                   stroke="var(--chart-income, #10b981)"
-                  strokeWidth={2.5}
+                  strokeWidth={2.75}
                   dot={false}
                   activeDot={{ r: 6 }}
                 />
@@ -449,7 +496,7 @@ const Dashboard = () => {
                   type="monotoneX"
                   dataKey="Dépenses"
                   stroke="var(--chart-expense, #f43f5e)"
-                  strokeWidth={2.5}
+                  strokeWidth={2.75}
                   dot={false}
                   activeDot={{ r: 6 }}
                 />
@@ -470,8 +517,14 @@ const Dashboard = () => {
                     outerRadius={104}
                     paddingAngle={2}
                     labelLine={false}
+                    activeIndex={activePieIndex}
+                    activeShape={renderActiveSlice}
+                    onMouseEnter={(_: unknown, idx: number) =>
+                      setActivePieIndex(idx)
+                    }
+                    onMouseLeave={() => setActivePieIndex(-1)}
                     label={({ name, percent }) =>
-                      `${name} ${(percent * 100).toFixed(0)}%`
+                      `${name as string} ${(percent * 100).toFixed(0)}%`
                     }
                   >
                     {pieData.map((_, index) => (
@@ -482,15 +535,7 @@ const Dashboard = () => {
                       />
                     ))}
                   </Pie>
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "var(--chart-tooltip-bg, #ffffff)",
-                      color: "var(--chart-tooltip-fg, #1f2937)",
-                      border: "1px solid var(--chart-axis, #475569)",
-                      borderRadius: 8,
-                      boxShadow: "0 6px 18px rgba(0,0,0,0.08)",
-                    }}
-                  />
+                  <Tooltip content={<CustomTooltip />} />
                 </PieChart>
               </ResponsiveContainer>
             ) : (
