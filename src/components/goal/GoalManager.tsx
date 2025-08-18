@@ -27,7 +27,6 @@ export default function GoalManager() {
     formState: { errors },
   } = useForm<GoalFormValues>();
 
-  // ✅ Fetch géré dans le parent pour résoudre le bug F5
   useEffect(() => {
     const fetchGoals = async () => {
       try {
