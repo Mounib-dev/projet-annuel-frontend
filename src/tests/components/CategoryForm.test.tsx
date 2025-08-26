@@ -1,65 +1,79 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, it, expect, vi } from "vitest";
+import { vi } from "vitest";
 import CategoryForm from "../../components/category/CategoryForm";
+
+// Mock de l'API pour éviter les vraies requêtes HTTP
+vi.mock("../../api", () => ({
+  default: {
+    post: vi.fn(() => Promise.resolve({
+      status: 201,
+      data: { _id: "123", title: "Test" }
+    }))
+  }
+}));
 
 describe("CategoryForm", () => {
   it("affiche les champs du formulaire", () => {
-    render(<CategoryForm sendIconToTransactionForm={vi.fn()} />);
+    render(<CategoryForm onAddCategory={vi.fn()} />);
 
-    // Le champ titre
+    // Champ texte
     expect(screen.getByLabelText(/Titre/i)).toBeInTheDocument();
 
-    // Le texte "Icône"
+    // Texte "Icône"
     expect(screen.getByText(/Icône/i)).toBeInTheDocument();
 
-    // Les boutons radio avec aria-labels
-    expect(screen.getByRole("radio", { name: /Martini/i })).toBeInTheDocument();
-    expect(screen.getByRole("radio", { name: /Credit Card/i })).toBeInTheDocument();
+    // Bouton Ajouter
+    expect(screen.getByRole("button", { name: /ajouter/i })).toBeInTheDocument();
 
-    // Le bouton Ajouter
-    expect(screen.getByRole("button", { name: /Ajouter/i })).toBeInTheDocument();
+    // Inputs radio (on compte juste le nombre)
+    expect(screen.getAllByRole("radio")).toHaveLength(5);
   });
 
   it("permet de sélectionner une icône", async () => {
-    render(<CategoryForm sendIconToTransactionForm={vi.fn()} />);
+    render(<CategoryForm onAddCategory={vi.fn()} />);
+    const user = userEvent.setup();
 
-    const martiniRadio = screen.getByRole("radio", { name: /Martini/i });
-    const creditCardRadio = screen.getByRole("radio", { name: /Credit Card/i });
+    const radios = screen.getAllByRole("radio");
+    await user.click(radios[0]);
+    expect(radios[0]).toBeChecked();
 
-    await userEvent.click(martiniRadio);
-    expect(martiniRadio).toBeChecked();
-
-    await userEvent.click(creditCardRadio);
-    expect(creditCardRadio).toBeChecked();
+    await user.click(radios[1]);
+    expect(radios[1]).toBeChecked();
   });
 
-  it("appelle sendIconToTransactionForm avec 'Test' au clic sur Ajouter", async () => {
-    const mockSend = vi.fn();
-    render(<CategoryForm sendIconToTransactionForm={mockSend} />);
+  it("appelle onAddCategory après submit", async () => {
+    const mockAdd = vi.fn();
+    render(<CategoryForm onAddCategory={mockAdd} />);
+    const user = userEvent.setup();
 
-    const submitButton = screen.getByRole("button", { name: /Ajouter/i });
-    await userEvent.click(submitButton);
+    // Remplir titre
+    await user.type(screen.getByLabelText(/Titre/i), "Test");
 
-    expect(mockSend).toHaveBeenCalledTimes(1);
-    expect(mockSend).toHaveBeenCalledWith("Test");
+    // Sélectionner une icône
+    const radios = screen.getAllByRole("radio");
+    await user.click(radios[0]);
+
+    // Soumettre
+    await user.click(screen.getByRole("button", { name: /ajouter/i }));
+
+    expect(mockAdd).toHaveBeenCalledTimes(1);
+    expect(mockAdd).toHaveBeenCalledWith({
+      id: "123",
+      title: "Test",
+      icon: expect.anything()
+    });
   });
 
- it("empêche le rechargement de la page au submit", () => {
-  const mockSend = vi.fn();
-  render(<CategoryForm sendIconToTransactionForm={mockSend} />);
+  it("empêche le rechargement de la page au submit", () => {
+    render(<CategoryForm onAddCategory={vi.fn()} />);
 
-  const form = screen.getByTestId("category-form");
+   // const form = screen.getByRole("form");
+    const form = screen.getByTestId("category-form");
+    const event = new Event("submit", { bubbles: true, cancelable: true });
+    const preventDefaultSpy = vi.spyOn(event, "preventDefault");
 
-  // Crée un event réel avec preventDefault espionné
-  const event = new Event("submit", { bubbles: true, cancelable: true });
-  Object.defineProperty(event, "preventDefault", {
-    value: vi.fn(),
-    writable: true,
+    form.dispatchEvent(event);
+    expect(preventDefaultSpy).toHaveBeenCalled();
   });
-
-  form.dispatchEvent(event);
-
-  expect(event.preventDefault).toHaveBeenCalled();
-});
 });

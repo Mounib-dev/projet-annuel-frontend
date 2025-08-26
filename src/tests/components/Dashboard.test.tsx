@@ -1,12 +1,9 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { describe, it, vi, beforeEach, expect, beforeAll } from "vitest";
 import Dashboard from "../../components/Dashboard";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
-
-
 
 // Mock global de ResizeObserver
 beforeAll(() => {
@@ -16,7 +13,6 @@ beforeAll(() => {
     disconnect() {}
   };
 });
-
 
 // Mocks
 vi.mock("../../api", () => ({
@@ -83,16 +79,15 @@ beforeEach(() => {
 });
 
 describe("Dashboard", () => {
- it("affiche le solde, revenus et dépenses", async () => {
-  render(<Dashboard />);
-  expect(await screen.findByText("Salaire")).toBeInTheDocument();
- expect(screen.getAllByText(/Revenus/i)[0]).toBeInTheDocument();
-  expect(screen.getAllByText(/Dépenses/i)[0]).toBeInTheDocument();
-  expect(screen.getByText(/Solde/i)).toBeInTheDocument();
-  expect(screen.getByText("2000.00 €")).toBeInTheDocument();
-  expect(screen.getAllByText("1000.00 €").length).toBeGreaterThanOrEqual(1);
-});
-
+  it("affiche le solde, revenus et dépenses", async () => {
+    render(<Dashboard />);
+    expect(await screen.findByText("Salaire")).toBeInTheDocument();
+    expect(screen.getAllByText(/Revenus/i)[0]).toBeInTheDocument();
+    expect(screen.getAllByText(/Dépenses/i)[0]).toBeInTheDocument();
+    expect(screen.getByText(/Solde/i)).toBeInTheDocument();
+    expect(screen.getByText("2000.00 €")).toBeInTheDocument();
+    expect(screen.getAllByText("1000.00 €").length).toBeGreaterThanOrEqual(1);
+  });
 
   it("affiche l'alerte de grosses dépenses", async () => {
     render(<Dashboard />);
@@ -110,7 +105,7 @@ describe("Dashboard", () => {
 
   it("test de l'export Excel", async () => {
     render(<Dashboard />);
-    const exportButton = await screen.findByText("Exporter Excel");
+    const exportButton = await screen.findByText(/Exporter Excel/i);
     fireEvent.click(exportButton);
 
     await waitFor(() => {
@@ -124,9 +119,15 @@ describe("Dashboard", () => {
 
   it("pagination fonctionne correctement", async () => {
     render(<Dashboard />);
-    const nextButton = await screen.findByText("Suivant →");
+
+    // attendre qu'une transaction apparaisse
+    await screen.findByText("Salaire");
+
+    // chercher le bouton Suivant
+    const nextButton = await screen.findByText(/Suivant\s*→/i);
     fireEvent.click(nextButton);
-    const pageIndicator = screen.getByText(/Page \d+ \/ \d+/);
+
+    const pageIndicator = await screen.findByText(/Page \d+ \/ \d+/);
     expect(pageIndicator).toBeInTheDocument();
   });
 
