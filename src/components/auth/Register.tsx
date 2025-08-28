@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const Register: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -11,6 +11,8 @@ const Register: React.FC = () => {
   });
 
   const [feedbackMessage, setFeedbackMessage] = useState<string>("");
+
+  const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -45,6 +47,9 @@ const Register: React.FC = () => {
           password: "",
           confirmPassword: "",
         });
+        setTimeout(() => {
+          navigate("/login");
+        }, 2000);
       } else {
         alert("Erreur lors de l'inscription.");
       }
