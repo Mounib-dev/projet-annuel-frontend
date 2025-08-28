@@ -22,6 +22,7 @@ import {
 
 import DialogModal from "../utils/DialogModal";
 import CategoryForm from "../category/CategoryForm";
+import api from "../../api";
 
 export type TransactionData = {
   transactionType: string;
@@ -141,7 +142,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ onFormSubmit }) => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await axios.get<CategoryFromApi[]>(
+        const response = await api.get<CategoryFromApi[]>(
           `${import.meta.env.VITE_API_BASE_URL}/category`,
         );
 
