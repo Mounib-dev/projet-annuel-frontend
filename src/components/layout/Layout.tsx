@@ -5,6 +5,7 @@ import BalanceModal from "../balance/BalanceModal";
 import FloatingChatbot from "../chatbot/FloatingChatBot";
 
 import { useAuth } from "../../context/AuthContext";
+import { useBalance } from "../../context/BalanceContext";
 import api from "../../api";
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -12,8 +13,11 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isBalanceModalOpen, setBalanceModalOpen] = useState<boolean>(true);
   const [hasBalance, setHasBalance] = useState<boolean>(false);
 
+  const { setBalance } = useBalance();
+
   const handleSaveBalance = (balance: number) => {
     console.log("Balance saved:", balance);
+    setBalance(balance);
     setBalanceModalOpen(false);
   };
 
@@ -24,19 +28,19 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         import.meta.env.VITE_API_BASE_URL + balanceEndpoint,
       );
       if (response.status === 200 && response.data.amount) {
-        return setHasBalance(false);
+        return setHasBalance(true);
       }
-      return setHasBalance(true);
+      return setHasBalance(false);
     };
 
     if (isLoggedIn) fetchUserBalance();
-  }, [isLoggedIn]);
+  }, [isLoggedIn, setBalance]);
 
   return (
     <div className="flex min-h-screen flex-col bg-gray-100 dark:bg-gray-900">
       <NavBar />
 
-      {isLoggedIn && hasBalance && (
+      {isLoggedIn && !hasBalance && (
         <BalanceModal open={isBalanceModalOpen} onSave={handleSaveBalance} />
       )}
 
