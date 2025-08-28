@@ -29,8 +29,8 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       return setHasBalance(true);
     };
 
-    fetchUserBalance();
-  }, []);
+    if (isLoggedIn) fetchUserBalance();
+  }, [isLoggedIn]);
 
   return (
     <div className="flex min-h-screen flex-col bg-gray-100 dark:bg-gray-900">
