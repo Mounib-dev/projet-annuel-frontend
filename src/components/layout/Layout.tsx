@@ -16,7 +16,6 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { setBalance } = useBalance();
 
   const handleSaveBalance = (balance: number) => {
-    console.log("Balance saved:", balance);
     setBalance(balance);
     setBalanceModalOpen(false);
   };
