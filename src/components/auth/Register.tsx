@@ -24,7 +24,6 @@ const Register: React.FC = () => {
       return;
     }
     try {
-      console.log(formData);
       const registerEndpoint = "user/register";
       const response = await fetch(
         `${import.meta.env.VITE_API_BASE_URL}/${registerEndpoint}`,
