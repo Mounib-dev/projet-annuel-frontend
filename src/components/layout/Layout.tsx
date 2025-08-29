@@ -43,7 +43,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         <BalanceModal open={isBalanceModalOpen} onSave={handleSaveBalance} />
       )}
 
-      <main className="mt-16 flex-1 rounded-md bg-white shadow-md dark:bg-gray-800">
+      <main className="mt-16 flex-1 rounded-md bg-gray-50 shadow-md transition-colors duration-500 dark:bg-gray-900">
         {children}
       </main>
 
