@@ -192,7 +192,7 @@ const TransactionsList: React.FC<Props> = ({ refreshKey = 0 }) => {
   };
 
   const applyBalanceDeltaForDelete = (tx: TransactionItem) => {
-    const type = tx.transactionType as "expense" | "income";
+    const type = tx.type as "expense" | "income";
     const amt = Number(tx.amount);
     const delta = type === "expense" ? amt : -amt;
     setBalance(balance + delta);
