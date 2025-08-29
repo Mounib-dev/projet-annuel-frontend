@@ -33,14 +33,14 @@ export type TransactionData = {
   date: string;
 };
 
-// Type strict pour une catégorie locale
+// Type for local Category
 type Category = {
   id: string;
   label: string;
   icon: React.ReactNode;
 };
 
-// Type strict pour une catégorie venant de l'API
+// Type for category from API
 type CategoryFromApi = {
   _id: string;
   title: string;
@@ -163,7 +163,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ onFormSubmit }) => {
   }, []);
 
   return (
-    <div className="mx-auto w-full max-w-lg rounded-xl bg-white p-8 shadow-md dark:bg-gray-800 dark:text-white">
+    <>
       <DialogModal
         isOpen={isModalOpen}
         onClose={() => setModalOpen(false)}
@@ -228,7 +228,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ onFormSubmit }) => {
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               Catégorie
             </label>
-            <div className="mt-3 flex flex-wrap items-center gap-3">
+            <div className="mt-3 flex flex-wrap items-center gap-3 dark:text-slate-100">
               {categories.map((cat) => (
                 <label htmlFor={cat.id} key={cat.id}>
                   <input
@@ -343,7 +343,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ onFormSubmit }) => {
           Enregistrer
         </button>
       </form>
-    </div>
+    </>
   );
 };
 
