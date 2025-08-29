@@ -1,48 +1,33 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import TransactionForm from "./TransactionForm";
-import api from "../../api";
-
 import { useBalance } from "../../context/BalanceContext";
-
 import type { TransactionData } from "./TransactionForm";
+import TransactionsList from "./TransactionsList";
 
 const Transaction: React.FC = () => {
-  const [transactions, setTransactions] = useState<TransactionData[]>([]);
-
   const { balance, setBalance } = useBalance();
+  const [refreshKey, setRefreshKey] = useState<number>(0);
 
   const handleTransactionSubmit = (transaction: TransactionData) => {
-    setTransactions([...transactions, transaction]);
     if (transaction.transactionType === "expense") {
       setBalance(balance - +transaction.amount);
     } else if (transaction.transactionType === "income") {
       setBalance(balance + +transaction.amount);
     }
+    setRefreshKey((k) => k + 1);
   };
 
-  const transactionsEndpoint = "transaction/list";
-  useEffect(() => {
-    const fetchTransactions = async () => {
-      try {
-        const response = await api.get(
-          `${import.meta.env.VITE_API_BASE_URL}/${transactionsEndpoint}`,
-        );
-
-        if (response.status === 200) {
-          const retrievedTransactions = response.data;
-          setTransactions(retrievedTransactions);
-        }
-      } catch (error) {
-        console.error("Error fetching transactions:", error);
-      }
-    };
-    fetchTransactions();
-  }, []);
-
   return (
-    <div className="mx-auto mt-5 max-w-md rounded-lg p-4 shadow-md">
-      <TransactionForm onFormSubmit={handleTransactionSubmit} />
-    </div>
+    <>
+      {/* Liste des transactions */}
+      <div className="mt-6">
+        <TransactionsList refreshKey={refreshKey} />
+      </div>
+      {/* Formulaire de création */}
+      <div className="mx-auto my-3 max-w-md rounded-lg bg-white p-4 shadow-md dark:bg-gray-800">
+        <TransactionForm onFormSubmit={handleTransactionSubmit} />
+      </div>
+    </>
   );
 };
 
