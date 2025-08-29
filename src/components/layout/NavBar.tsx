@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
 
@@ -12,6 +12,8 @@ import { useBalance } from "../../context/BalanceContext";
 
 function NavBar() {
   const [isOpen, setIsOpen] = useState(false);
+
+  const location = useLocation();
 
   const { balance } = useBalance();
 
@@ -60,7 +62,7 @@ function NavBar() {
                 <li className="py-2 md:py-0">
                   <Link
                     to="/"
-                    className="block hover:text-emerald-300 dark:hover:text-emerald-600"
+                    className={`block hover:text-emerald-300 dark:hover:text-emerald-600 ${location.pathname === "/" ? "text-emerald-300 dark:text-emerald-600" : ""}`}
                   >
                     Dashboard
                   </Link>
@@ -68,7 +70,7 @@ function NavBar() {
                 <li className="py-2 md:py-0">
                   <Link
                     to="/transaction"
-                    className="block hover:text-emerald-300 dark:hover:text-emerald-600"
+                    className={`block hover:text-emerald-300 dark:hover:text-emerald-600 ${location.pathname === "/transaction" ? "text-emerald-300 dark:text-emerald-600" : ""}`}
                   >
                     Transactions
                   </Link>
@@ -77,7 +79,7 @@ function NavBar() {
                 <li className="py-2 md:py-0">
                   <Link
                     to="/goal"
-                    className="block hover:text-emerald-300 dark:hover:text-emerald-600"
+                    className={`block hover:text-emerald-300 dark:hover:text-emerald-600 ${location.pathname === "/goal" ? "text-emerald-300 dark:text-emerald-600" : ""}`}
                   >
                     Goals
                   </Link>
@@ -85,7 +87,7 @@ function NavBar() {
                 <li className="py-2 md:py-0">
                   <Link
                     to="/ai-assistant"
-                    className="block hover:text-emerald-300 dark:hover:text-emerald-600"
+                    className={`block hover:text-emerald-300 dark:hover:text-emerald-600 ${location.pathname === "/ai-assistant" ? "text-emerald-300 dark:text-emerald-600" : ""}`}
                   >
                     Assistance
                   </Link>
@@ -94,7 +96,7 @@ function NavBar() {
                 <li className="py-2 md:py-0">
                   <Link
                     to="/profile"
-                    className="block hover:text-emerald-300 dark:hover:text-emerald-600"
+                    className={`block hover:text-emerald-300 dark:hover:text-emerald-600 ${location.pathname === "/profile" ? "text-emerald-300 dark:text-emerald-600" : ""}`}
                   >
                     {user}
                   </Link>
