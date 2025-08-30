@@ -10,17 +10,18 @@ import api from "../api";
 import { useAuth } from "./AuthContext";
 
 interface BalanceContextType {
-  balance: number;
+  balance: number | null;
   setBalance: (value: number) => void;
   fetchBalance: () => Promise<void>;
 }
 
 //const BalanceContext = createContext<BalanceContextType | undefined>(undefined);
-export const BalanceContext = createContext<BalanceContextType | undefined>(undefined);
-
+export const BalanceContext = createContext<BalanceContextType | undefined>(
+  undefined,
+);
 
 export const BalanceProvider = ({ children }: { children: ReactNode }) => {
-  const [balance, setBalance] = useState<number>(0);
+  const [balance, setBalance] = useState<number | null>(null);
   const { isLoggedIn } = useAuth();
 
   const fetchBalance = async () => {
@@ -38,8 +39,8 @@ export const BalanceProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
-    if (isLoggedIn) fetchBalance();
-  }, [isLoggedIn]);
+    if (isLoggedIn && balance === null) fetchBalance();
+  }, [isLoggedIn, balance]);
 
   return (
     <BalanceContext.Provider value={{ balance, setBalance, fetchBalance }}>
