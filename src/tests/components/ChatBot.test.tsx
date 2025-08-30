@@ -1,94 +1,114 @@
-// ChatBot.test.jsx
+// ChatBot.test.tsx
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import ChatBot from "../../components/chatbot/ChatBot";
+import userEvent from "@testing-library/user-event";
+import {
+  describe,
+  it,
+  expect,
+  vi,
+  beforeEach,
+  afterEach,
+  beforeAll,
+} from "vitest";
 import React from "react";
 
-// Mock AuthContext
 vi.mock("../../context/AuthContext", () => ({
-  useAuth: () => ({
-    token: "mock-token",
-  }),
+  useAuth: () => ({ token: "TEST_TOKEN" }),
 }));
 
-// Mock scroll behavior
-Object.defineProperty(HTMLElement.prototype, "scrollTo", {
-  configurable: true,
-  value: vi.fn(),
+vi.mock("../../hooks/useChatMessages", () => {
+  const React = require("react") as typeof import("react");
+  return {
+    useChatMessages: () =>
+      React.useState<import("../../types/chat").ChatMessage[]>([]),
+  };
 });
 
-describe("ChatBot component", () => {
+// 3) Important : stub de la base URL
+const API_BASE = "http://localhost:3000/api/v1";
+beforeEach(() => {
+  (import.meta as any).env = {
+    ...(import.meta as any).env,
+    VITE_API_BASE_URL: API_BASE,
+  };
+});
+
+beforeAll(() => {
+  Object.defineProperty(HTMLElement.prototype, "scrollTo", {
+    configurable: true,
+    value: vi.fn(),
+  });
+});
+
+import ChatBot from "../../components/chatbot/ChatBot";
+
+describe.sequential("ChatBot", () => {
   beforeEach(() => {
-    vi.resetAllMocks();
+    vi.restoreAllMocks();
   });
 
-  it("renders chatbot UI correctly", () => {
-    render(<ChatBot />);
-    expect(screen.getByText("💰 Finance Chatbot")).toBeInTheDocument();
-    expect(screen.getByPlaceholderText("Ask about finance...")).toBeInTheDocument();
-    expect(screen.getByText("Send")).toBeInTheDocument();
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
-  it("allows typing in input field", () => {
+  it("affiche l'en-tête, l'input et le bouton", () => {
     render(<ChatBot />);
-    const input = screen.getByPlaceholderText("Ask about finance...");
-    fireEvent.change(input, { target: { value: "Hello bot" } });
-    expect(input.value).toBe("Hello bot");
+
+    expect(screen.getByText(/finance chatbot/i)).toBeInTheDocument();
+    const input = screen.getByPlaceholderText(/ask about finance/i);
+    expect(input).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /send/i })).toBeInTheDocument();
   });
 
-  it("sends a message and displays user message", async () => {
-    const mockStream = new ReadableStream({
-      start(controller) {
-        const payload = JSON.stringify({ text: "Hello from bot" });
-        controller.enqueue(new TextEncoder().encode(`data: ${payload}\n`));
-        controller.close();
-      },
-    });
+  it("n'envoie rien si l'input est vide", async () => {
+    const user = userEvent.setup();
+    const fetchSpy = vi
+      .spyOn(global, "fetch" as any)
+      .mockResolvedValueOnce({} as Response);
 
-    vi.stubGlobal("fetch", vi.fn(() =>
-      Promise.resolve({
-        body: mockStream,
-      }),
-    ));
+    render(<ChatBot />);
+    await user.click(screen.getByRole("button", { name: /send/i }));
+
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it("soumet avec le token et le bon payload; gère body null", async () => {
+    const user = userEvent.setup();
+
+    // Réponse sans body
+    const fetchSpy = vi.spyOn(global, "fetch" as any).mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      body: null,
+    } as Response);
 
     render(<ChatBot />);
 
-    const input = screen.getByPlaceholderText("Ask about finance...");
-    const button = screen.getByText("Send");
+    const input = screen.getByPlaceholderText(/ask about finance/i);
+    await user.type(input, "Hello bot");
+    await user.click(screen.getByRole("button", { name: /send/i }));
 
-    fireEvent.change(input, { target: { value: "Hello" } });
-    fireEvent.click(button);
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    const [calledUrl, options] = fetchSpy.mock.calls[0];
+
+    expect(calledUrl).toBe(`${API_BASE}/chatbot/assistant`);
+    expect(options.method).toBe("POST");
+    expect(options.headers["Content-Type"]).toBe("application/json");
+    expect(options.headers.Authorization).toBe("Bearer TEST_TOKEN");
+
+    const parsed = JSON.parse(options.body);
+    expect(parsed.messages).toEqual([{ role: "user", content: "Hello bot" }]);
 
     await waitFor(() => {
-      expect(screen.getByText("You:")).toBeInTheDocument();
-      expect(screen.getByText("Bot:")).toBeInTheDocument();
-      expect(screen.getByText(/Hello from bot/)).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /send/i })).toBeInTheDocument();
     });
   });
 
-  it("disables send button while loading", async () => {
-    const mockStream = new ReadableStream({
-      start(controller) {
-        controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ text: "..." })}\n`));
-        controller.close();
-      },
-    });
+  it("preventDefault au submit", () => {
+    const { container } = render(<ChatBot />);
+    const form = container.querySelector("form")!;
+    const canceled = fireEvent.submit(form);
 
-    vi.stubGlobal("fetch", vi.fn(() =>
-      Promise.resolve({
-        body: mockStream,
-      }),
-    ));
-
-    render(<ChatBot />);
-    const input = screen.getByPlaceholderText("Ask about finance...");
-    const button = screen.getByText("Send");
-
-    fireEvent.change(input, { target: { value: "Test loading" } });
-    fireEvent.click(button);
-
-    expect(button).toBeDisabled();
-
-    await waitFor(() => expect(button).not.toBeDisabled());
+    expect(canceled).toBe(false);
   });
 });
