@@ -171,23 +171,20 @@ const TransactionsList: React.FC<Props> = ({ refreshKey = 0 }) => {
     oldTx: TransactionItem,
     newTx: TransactionData,
   ) => {
-    const oldType = oldTx.transactionType as "expense" | "income";
+    const oldType = oldTx.type as "expense" | "income";
     const newType = newTx.transactionType as "expense" | "income";
     const oldAmount = Number(oldTx.amount);
     const newAmount = Number(newTx.amount);
 
     let delta = 0;
     if (oldType === newType) {
-      if (oldType === "expense") {
-        delta = oldAmount - newAmount;
-      } else {
-        delta = newAmount - oldAmount;
-      }
+      delta =
+        oldType === "expense" ? oldAmount - newAmount : newAmount - oldAmount;
     } else {
       delta += oldType === "expense" ? oldAmount : -oldAmount;
-
       delta += newType === "expense" ? -newAmount : newAmount;
     }
+
     setBalance(balance + delta);
   };
 
@@ -215,12 +212,17 @@ const TransactionsList: React.FC<Props> = ({ refreshKey = 0 }) => {
     if (!editItem || !form) return;
     try {
       const endpoint = `transaction/${editItem._id}`;
-      await api.patch(`${import.meta.env.VITE_API_BASE_URL}/${endpoint}`, form);
-
+      const response = await api.patch(
+        `${import.meta.env.VITE_API_BASE_URL}/${endpoint}`,
+        form,
+      );
+      const { type, category, amount, description, date } = response.data.tx;
       // Update list locally + update balance state via its hook/context
       applyBalanceDeltaForUpdate(editItem, form);
       const updated = transactions.map((t) =>
-        t._id === editItem._id ? { ...t, ...form } : t,
+        t._id === editItem._id
+          ? { ...t, ...{ type, category, amount, description, date } }
+          : t,
       );
       // sort again by date
       updated.sort((a, b) => {
