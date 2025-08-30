@@ -1,7 +1,8 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import api from "../../api";
 import { useBalance } from "../../context/BalanceContext";
 import type { TransactionData } from "./TransactionForm";
+import TransactionForm from "./TransactionForm";
 import {
   Pencil,
   Trash2,
@@ -21,7 +22,13 @@ import {
   HomeIcon,
   ShoppingCart,
   GiftIcon,
+  Plus,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
+
+/** Pagination **/
+const PAGE_SIZE = 8;
 
 /** Types **/
 type TransactionItem = TransactionData & {
@@ -56,7 +63,7 @@ function capitalizeFirst(text: string) {
   return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
 }
 
-/**Default Categories **/
+/** Default Categories **/
 const defaultCategories: {
   id: string;
   label: string;
@@ -105,9 +112,10 @@ const Modal: React.FC<{
 
 type Props = {
   refreshKey?: number;
+  onCreate?: (tx: TransactionData) => void; // callback parent quand on ajoute
 };
 
-const TransactionsList: React.FC<Props> = ({ refreshKey = 0 }) => {
+const TransactionsList: React.FC<Props> = ({ refreshKey = 0, onCreate }) => {
   const [transactions, setTransactions] = useState<TransactionItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [categories, setCategories] = useState<
@@ -115,6 +123,12 @@ const TransactionsList: React.FC<Props> = ({ refreshKey = 0 }) => {
   >([]);
   const [editItem, setEditItem] = useState<TransactionItem | null>(null);
   const [form, setForm] = useState<TransactionData | null>(null);
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+
+  // Pagination
+  const [page, setPage] = useState(1);
+  const listTopRef = useRef<HTMLDivElement | null>(null);
+
   const { balance, setBalance } = useBalance();
 
   /** Fetch categories  **/
@@ -155,6 +169,7 @@ const TransactionsList: React.FC<Props> = ({ refreshKey = 0 }) => {
         return db - da;
       });
       setTransactions(items);
+      setPage(1);
     } catch (e) {
       console.error("Error fetching transactions:", e);
       setTransactions([]);
@@ -166,6 +181,46 @@ const TransactionsList: React.FC<Props> = ({ refreshKey = 0 }) => {
   useEffect(() => {
     fetchTransactions();
   }, [refreshKey]);
+
+  useEffect(() => {
+    const totalPages = Math.max(1, Math.ceil(transactions.length / PAGE_SIZE));
+    if (page > totalPages) setPage(totalPages);
+  }, [transactions, page]);
+
+  // Helpers pagination
+  const totalPages = useMemo(
+    () => Math.max(1, Math.ceil(transactions.length / PAGE_SIZE)),
+    [transactions.length],
+  );
+
+  const pageSlice = useMemo(() => {
+    const start = (page - 1) * PAGE_SIZE;
+    return transactions.slice(start, start + PAGE_SIZE);
+  }, [transactions, page]);
+
+  const goToPage = (p: number) => {
+    const next = Math.min(Math.max(1, p), totalPages);
+    if (next !== page) {
+      setPage(next);
+
+      listTopRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  };
+
+  const getPageNumbers = () => {
+    const maxButtons = 5;
+    const pages: number[] = [];
+    let start = Math.max(1, page - 2);
+    const end = Math.min(totalPages, start + maxButtons - 1);
+    if (end - start + 1 < maxButtons) {
+      start = Math.max(1, end - maxButtons + 1);
+    }
+    for (let i = start; i <= end; i++) pages.push(i);
+    return pages;
+  };
 
   const applyBalanceDeltaForUpdate = (
     oldTx: TransactionItem,
@@ -185,14 +240,14 @@ const TransactionsList: React.FC<Props> = ({ refreshKey = 0 }) => {
       delta += newType === "expense" ? -newAmount : newAmount;
     }
 
-    setBalance(balance + delta);
+    setBalance(balance! + delta);
   };
 
   const applyBalanceDeltaForDelete = (tx: TransactionItem) => {
     const type = tx.type as "expense" | "income";
     const amt = Number(tx.amount);
     const delta = type === "expense" ? amt : -amt;
-    setBalance(balance + delta);
+    setBalance(balance! + delta);
   };
 
   /** Open modal **/
@@ -217,14 +272,12 @@ const TransactionsList: React.FC<Props> = ({ refreshKey = 0 }) => {
         form,
       );
       const { type, category, amount, description, date } = response.data.tx;
-      // Update list locally + update balance state via its hook/context
       applyBalanceDeltaForUpdate(editItem, form);
       const updated = transactions.map((t) =>
         t._id === editItem._id
           ? { ...t, ...{ type, category, amount, description, date } }
           : t,
       );
-      // sort again by date
       updated.sort((a, b) => {
         const da = new Date(a.date).getTime();
         const db = new Date(b.date).getTime();
@@ -272,6 +325,7 @@ const TransactionsList: React.FC<Props> = ({ refreshKey = 0 }) => {
 
   const isEmpty = !loading && transactions.length === 0;
 
+  /** Modale d'édition **/
   const editModal = useMemo(
     () => (
       <Modal
@@ -421,13 +475,45 @@ const TransactionsList: React.FC<Props> = ({ refreshKey = 0 }) => {
       </Modal>
     ),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [editItem, form, categories, balance],
+    [editItem, form, categories],
   );
+
+  /** Modale de création **/
+  const createModal = useMemo(
+    () => (
+      <Modal
+        isOpen={isCreateOpen}
+        onClose={() => setIsCreateOpen(false)}
+        title="Ajouter une transaction"
+      >
+        <TransactionForm
+          onFormSubmit={(tx) => {
+            onCreate?.(tx);
+            setIsCreateOpen(false);
+          }}
+        />
+      </Modal>
+    ),
+    [isCreateOpen, onCreate],
+  );
+
+  const showPagination = !loading && transactions.length > PAGE_SIZE;
 
   return (
     <div className="mx-auto w-full max-w-3xl">
       <div className="rounded-xl bg-white p-4 shadow-md dark:bg-gray-800 dark:text-white">
-        <h2 className="mb-4 text-xl font-semibold">Transactions récentes</h2>
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-xl font-semibold">Transactions récentes</h2>
+          {transactions.length > 0 && (
+            <button
+              onClick={() => setIsCreateOpen(true)}
+              className="inline-flex items-center gap-2 rounded-md bg-emerald-600 px-3 py-2 text-white hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600"
+            >
+              <Plus className="h-4 w-4" />
+              <span className="hidden sm:inline">Ajouter</span>
+            </button>
+          )}
+        </div>
 
         {loading && (
           <p className="text-gray-500 dark:text-gray-400">Chargement…</p>
@@ -442,6 +528,7 @@ const TransactionsList: React.FC<Props> = ({ refreshKey = 0 }) => {
               href="#"
               onClick={(e) => {
                 e.preventDefault();
+                setIsCreateOpen(true);
               }}
               className="mt-3 inline-block rounded-md bg-emerald-600 px-4 py-2 text-white hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600"
             >
@@ -451,74 +538,175 @@ const TransactionsList: React.FC<Props> = ({ refreshKey = 0 }) => {
         )}
 
         {!loading && transactions.length > 0 && (
-          <ul className="divide-y divide-gray-200 dark:divide-gray-700">
-            {transactions.map((t) => (
-              <li
-                key={t._id}
-                className="bg- flex items-center gap-3 px-1 py-3 sm:px-2"
-              >
-                {/* Icône catégorie */}
-                <div className="shrink-0">
-                  <div className="text-emerald-600 dark:text-emerald-400">
-                    {categoryIconFor(t.category)}
+          <>
+            {/* Ancre pour scroll top lors des changements de page */}
+            <div ref={listTopRef} />
+
+            <ul className="divide-y divide-gray-200 dark:divide-gray-700">
+              {pageSlice.map((t) => (
+                <li
+                  key={t._id}
+                  className="bg- flex items-center gap-3 px-1 py-3 sm:px-2"
+                >
+                  {/* Icône catégorie */}
+                  <div className="shrink-0">
+                    <div className="text-emerald-600 dark:text-emerald-400">
+                      {categoryIconFor(t.category)}
+                    </div>
                   </div>
-                </div>
 
-                {/* Contenu */}
-                <div className="min-w-0 flex-1">
-                  {/* Description (tronquée) */}
-                  <p className="font-medium text-gray-900 dark:text-white">
-                    {truncate(t.description, 48)}
-                  </p>
+                  {/* Contenu */}
+                  <div className="min-w-0 flex-1">
+                    {/* Description (tronquée) */}
+                    <p className="font-medium text-gray-900 dark:text-white">
+                      {truncate(t.description, 48)}
+                    </p>
 
-                  {/* Infos ligne 2 */}
-                  <div className="mt-1 flex flex-wrap items-center gap-3 text-sm text-gray-600 dark:text-gray-300">
-                    <span
+                    {/* Infos ligne 2 */}
+                    <div className="mt-1 flex flex-wrap items-center gap-3 text-sm text-gray-600 dark:text-gray-300">
+                      <span
+                        className={
+                          t.type === "expense"
+                            ? "rounded-full bg-rose-50 px-2 py-0.5 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300 dark:ring-rose-800"
+                            : "rounded-full bg-emerald-50 px-2 py-0.5 text-emerald-700 dark:bg-emerald-900/20"
+                        }
+                      >
+                        {t.type === "expense" ? "Dépense" : "Revenu"}
+                      </span>
+                      <span className="tabular-nums">
+                        {new Date(t.date).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Montant */}
+                  <div className="text-right">
+                    <div
                       className={
-                        t.type === "expense"
-                          ? "rounded-full bg-rose-50 px-2 py-0.5 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300 dark:ring-rose-800"
-                          : "rounded-full bg-emerald-50 px-2 py-0.5 text-emerald-700 dark:bg-emerald-900/20"
+                        "text-base font-semibold sm:text-lg " +
+                        (t.type === "expense"
+                          ? "text-rose-700 dark:text-rose-300"
+                          : "text-emerald-600 dark:text-emerald-400")
                       }
                     >
-                      {t.type === "expense" ? "Dépense" : "Revenu"}
-                    </span>
-                    <span className="tabular-nums">
-                      {new Date(t.date).toLocaleDateString()}
-                    </span>
+                      {t.type === "expense" ? "-" : "+"}
+                      {Number(t.amount).toFixed(2)}€
+                    </div>
                   </div>
-                </div>
 
-                {/* Montant */}
-                <div className="text-right">
-                  <div
-                    className={
-                      "text-base font-semibold sm:text-lg " +
-                      (t.type === "expense"
-                        ? "text-rose-700 dark:text-rose-300"
-                        : "text-emerald-600 dark:text-emerald-400")
-                    }
+                  {/* Edit */}
+                  <button
+                    onClick={() => openEdit(t)}
+                    className="ml-2 rounded-md p-2 hover:bg-gray-100 dark:hover:bg-gray-700"
+                    aria-label="Modifier"
+                    title="Modifier"
                   >
-                    {t.type === "expense" ? "-" : "+"}
-                    {Number(t.amount).toFixed(2)}€
-                  </div>
+                    <Pencil />
+                  </button>
+                </li>
+              ))}
+            </ul>
+
+            {/* Pagination */}
+            {showPagination && (
+              <nav
+                className="mt-4 flex items-center justify-between"
+                aria-label="Pagination"
+              >
+                {/* Mobile: Prev/Next */}
+                <div className="flex w-full items-center justify-between sm:hidden">
+                  <button
+                    onClick={() => goToPage(page - 1)}
+                    disabled={page === 1}
+                    className="inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm disabled:opacity-50 dark:border-gray-700"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    Précédent
+                  </button>
+                  <span className="text-sm text-gray-600 dark:text-gray-300">
+                    Page {page} / {totalPages}
+                  </span>
+                  <button
+                    onClick={() => goToPage(page + 1)}
+                    disabled={page === totalPages}
+                    className="inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm disabled:opacity-50 dark:border-gray-700"
+                  >
+                    Suivant
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
                 </div>
 
-                {/* Edit */}
-                <button
-                  onClick={() => openEdit(t)}
-                  className="ml-2 rounded-md p-2 hover:bg-gray-100 dark:hover:bg-gray-700"
-                  aria-label="Modifier"
-                  title="Modifier"
-                >
-                  <Pencil />
-                </button>
-              </li>
-            ))}
-          </ul>
+                {/* Desktop: numéros + Prev/Next */}
+                <div className="hidden w-full items-center justify-between sm:flex">
+                  <button
+                    onClick={() => goToPage(page - 1)}
+                    disabled={page === 1}
+                    className="inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm disabled:opacity-50 dark:border-gray-700"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    Précédent
+                  </button>
+
+                  <div className="flex items-center gap-1">
+                    {/* Première page si cachée */}
+                    {getPageNumbers()[0] > 1 && (
+                      <>
+                        <button
+                          onClick={() => goToPage(1)}
+                          className="rounded-md px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700"
+                        >
+                          1
+                        </button>
+                        <span className="px-2 text-sm text-gray-500">…</span>
+                      </>
+                    )}
+
+                    {getPageNumbers().map((p) => (
+                      <button
+                        key={p}
+                        onClick={() => goToPage(p)}
+                        className={`rounded-md px-3 py-2 text-sm ${
+                          p === page
+                            ? "bg-emerald-600 text-white dark:bg-emerald-500"
+                            : "hover:bg-gray-100 dark:hover:bg-gray-700"
+                        }`}
+                        aria-current={p === page ? "page" : undefined}
+                      >
+                        {p}
+                      </button>
+                    ))}
+
+                    {/* Dernière page si cachée */}
+                    {getPageNumbers().slice(-1)[0] < totalPages && (
+                      <>
+                        <span className="px-2 text-sm text-gray-500">…</span>
+                        <button
+                          onClick={() => goToPage(totalPages)}
+                          className="rounded-md px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700"
+                        >
+                          {totalPages}
+                        </button>
+                      </>
+                    )}
+                  </div>
+
+                  <button
+                    onClick={() => goToPage(page + 1)}
+                    disabled={page === totalPages}
+                    className="inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm disabled:opacity-50 dark:border-gray-700"
+                  >
+                    Suivant
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </div>
+              </nav>
+            )}
+          </>
         )}
       </div>
 
       {editModal}
+      {createModal}
     </div>
   );
 };
