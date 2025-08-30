@@ -1,119 +1,124 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { afterEach, beforeEach, describe, it, expect, vi } from "vitest";
-import * as BalanceContext from "../../context/BalanceContext";
-import api from "../../api";
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import React from "react";
+
+let balanceValue = 100;
+
+const setBalanceSpy = vi.fn((next: number) => {
+  balanceValue = next;
+});
+
+vi.mock("../../context/BalanceContext", () => ({
+  useBalance: () => ({ balance: balanceValue, setBalance: setBalanceSpy }),
+}));
+
+vi.mock("../../components/transaction/TransactionForm", () => {
+  const React = require("react");
+  return {
+    default: ({ onFormSubmit }: { onFormSubmit: (t: any) => void }) => (
+      <div>
+        <button
+          onClick={() =>
+            onFormSubmit({ transactionType: "expense", amount: "50" })
+          }
+        >
+          SubmitExpense50
+        </button>
+        <button
+          onClick={() =>
+            onFormSubmit({ transactionType: "income", amount: "30" })
+          }
+        >
+          SubmitIncome30
+        </button>
+      </div>
+    ),
+  };
+});
+
+vi.mock("../../components/transaction/TransactionsList", () => {
+  const React = require("react");
+  return {
+    default: ({ refreshKey }: { refreshKey: number }) => (
+      <div>TransactionsList refreshKey={refreshKey}</div>
+    ),
+  };
+});
+
 import Transaction from "../../components/transaction/Transaction";
 
-// ✅ Mock de l'API
-vi.mock("../../api", () => ({
-  default: {
-    get: vi.fn(),
-  },
-}));
-
-// ✅ Mock du composant TransactionForm
-vi.mock("../../components/transaction/TransactionForm", () => ({
-  default: ({ onFormSubmit }: any) => (
-    <button
-      onClick={() =>
-        onFormSubmit({
-          description: "Test income",
-          amount: "100",
-          transactionType: "income",
-          date: new Date().toISOString(),
-          type: "income",
-        })
-      }
-    >
-      Submit Transaction
-    </button>
-  ),
-}));
-
-describe("Transaction Component", () => {
-  const mockSetBalance = vi.fn();
-
+describe.sequential("Transaction", () => {
   beforeEach(() => {
-    vi.spyOn(BalanceContext, "useBalance").mockReturnValue({
-      balance: 500,
-      setBalance: mockSetBalance,
-    });
-
-    (api.get as any).mockResolvedValue({
-      status: 200,
-      data: [
-        {
-          description: "Initial expense",
-          amount: "50",
-          type: "expense",
-          date: "2024-06-01T00:00:00.000Z",
-        },
-      ],
-    });
+    balanceValue = 100;
+    setBalanceSpy.mockClear();
   });
 
-  afterEach(() => {
-    vi.clearAllMocks();
-  });
-
-  it("fetches and displays transactions", async () => {
+  it("rend la liste (refreshKey=0) et le formulaire mocké", () => {
     render(<Transaction />);
 
-    await waitFor(() =>
-      expect(api.get).toHaveBeenCalledWith(
-        `${import.meta.env.VITE_API_BASE_URL}/transaction/list`
-      )
-    );
+    expect(
+      screen.getByText(/TransactionsList refreshKey=0/i),
+    ).toBeInTheDocument();
 
     expect(
-      await screen.findByText("Initial expense")
+      screen.getByRole("button", { name: /SubmitExpense50/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /SubmitIncome30/i }),
     ).toBeInTheDocument();
   });
 
-  it("adds a new transaction and updates balance", async () => {
+  it("soumission d'une dépense diminue le solde et incrémente refreshKey", async () => {
+    const user = userEvent.setup();
+    balanceValue = 200;
+
     render(<Transaction />);
 
-    // ✅ Assure que les données initiales sont chargées
-    await waitFor(() =>
-      expect(screen.getByText("Initial expense")).toBeInTheDocument()
-    );
+    await user.click(screen.getByRole("button", { name: /SubmitExpense50/i }));
 
-    // ✅ Utilise getByRole pour fiabilité
-    const submitButton = screen.getByRole("button", {
-      name: /submit transaction/i,
-    });
-    fireEvent.click(submitButton);
+    expect(setBalanceSpy).toHaveBeenCalledTimes(1);
+    expect(setBalanceSpy).toHaveBeenCalledWith(150);
 
-    // ✅ Attends l'ajout de la transaction simulée
-    await waitFor(() => {
-      expect(screen.getByText("Test income")).toBeInTheDocument();
-    });
-
-    // ✅ Vérifie la mise à jour de la balance
-    expect(mockSetBalance).toHaveBeenCalledWith(600); // 500 + 100
+    expect(
+      screen.getByText(/TransactionsList refreshKey=1/i),
+    ).toBeInTheDocument();
   });
 
-  it("displays pagination controls when needed", async () => {
-    // Mock avec plus de 5 transactions
-    (api.get as any).mockResolvedValue({
-      status: 200,
-      data: Array.from({ length: 7 }, (_, i) => ({
-        description: `Tx ${i + 1}`,
-        amount: "10",
-        type: "income",
-        date: "2024-06-01T00:00:00.000Z",
-      })),
-    });
+  it("soumission d'un revenu augmente le solde et incrémente refreshKey", async () => {
+    const user = userEvent.setup();
+    balanceValue = 100;
 
     render(<Transaction />);
 
-    expect(await screen.findByText("Page 1 of 2")).toBeInTheDocument();
-    expect(screen.getByText("Suivant")).toBeEnabled();
+    await user.click(screen.getByRole("button", { name: /SubmitIncome30/i }));
 
-    fireEvent.click(screen.getByText("Suivant"));
+    expect(setBalanceSpy).toHaveBeenCalledTimes(1);
+    expect(setBalanceSpy).toHaveBeenCalledWith(130);
 
-    await waitFor(() => {
-      expect(screen.getByText("Page 2 of 2")).toBeInTheDocument();
-    });
+    expect(
+      screen.getByText(/TransactionsList refreshKey=1/i),
+    ).toBeInTheDocument();
+  });
+
+  it("enchaîne plusieurs soumissions et incrémente refreshKey à chaque fois", async () => {
+    const user = userEvent.setup();
+    balanceValue = 300;
+
+    render(<Transaction />);
+
+    // 1) dépense 50 -> 250
+    await user.click(screen.getByRole("button", { name: /SubmitExpense50/i }));
+    expect(setBalanceSpy).toHaveBeenCalledWith(250);
+    expect(
+      screen.getByText(/TransactionsList refreshKey=1/i),
+    ).toBeInTheDocument();
+
+    // 2) revenu 30 -> 280
+    await user.click(screen.getByRole("button", { name: /SubmitIncome30/i }));
+    expect(setBalanceSpy).toHaveBeenCalledWith(280);
+    expect(
+      screen.getByText(/TransactionsList refreshKey=2/i),
+    ).toBeInTheDocument();
   });
 });
