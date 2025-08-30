@@ -26,7 +26,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       const response = await api.get(
         import.meta.env.VITE_API_BASE_URL + balanceEndpoint,
       );
-      if (response.status === 200 && response.data.amount) {
+      if (response.status === 200 && response.data.user) {
         return setHasBalance(true);
       }
       return setHasBalance(false);
