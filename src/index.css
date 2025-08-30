@@ -3,3 +3,39 @@
 @plugin "tailwind-scrollbar";
 
 @custom-variant dark (&:where(.dark, .dark *));
+
+/* === Variables CSS adoucies pour les charts === */
+:root {
+  /* axes + grid + tooltip */
+  --chart-axis: #475569; /* slate-600, lisible sans être noir */
+  --chart-grid: #e2e8f0; /* slate-200 */
+  --chart-tooltip-bg: #ffffff; /* blanc */
+  --chart-tooltip-fg: #1f2937; /* slate-800, pas noir */
+
+  /* courbes (garde vert/rouge, versions plus douces) */
+  --chart-income: #10b981; /* emerald-500 */
+  --chart-expense: #f43f5e; /* rose-500 (rouge doux) */
+
+  /* parts du camembert (douces) */
+  --chart-pie-1: #f43f5e; /* rose-500 */
+  --chart-pie-2: #fb923c; /* orange-400 */
+  --chart-pie-3: #fbbf24; /* amber-400 */
+  --chart-pie-4: #10b981; /* emerald-500 */
+  --chart-pie-5: #0ea5e9; /* sky-500 */
+}
+
+.dark {
+  --chart-axis: #cbd5e1; /* slate-300 */
+  --chart-grid: #334155; /* slate-700 */
+  --chart-tooltip-bg: #1f2937; /* slate-800 (pas noir) */
+  --chart-tooltip-fg: #e5e7eb; /* gray-200 */
+
+  --chart-income: #34d399; /* emerald-400 */
+  --chart-expense: #fb7185; /* rose-400 */
+
+  --chart-pie-1: #fb7185; /* rose-400 */
+  --chart-pie-2: #fdba74; /* orange-300 */
+  --chart-pie-3: #fcd34d; /* amber-300 */
+  --chart-pie-4: #34d399; /* emerald-400 */
+  --chart-pie-5: #38bdf8; /* sky-400 */
+}

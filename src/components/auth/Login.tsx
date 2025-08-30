@@ -33,7 +33,7 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-r from-green-400 to-green-600 p-4 dark:from-gray-900 dark:to-gray-700">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-r from-emerald-400 to-emerald-600 p-4 dark:from-gray-900 dark:to-gray-700">
       <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-lg dark:bg-gray-800">
         <h2 className="text-center text-2xl font-bold text-gray-800 dark:text-white">
           Connexion à SmartFunds
@@ -54,7 +54,7 @@ const Login: React.FC = () => {
               value={formData.email}
               onChange={handleChange}
               required
-              className="w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2 text-gray-900 focus:ring-2 focus:ring-green-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+              className="w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2 text-gray-900 focus:ring-2 focus:ring-emerald-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             />
           </div>
 
@@ -69,7 +69,7 @@ const Login: React.FC = () => {
               value={formData.password}
               onChange={handleChange}
               required
-              className="w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2 text-gray-900 focus:ring-2 focus:ring-green-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+              className="w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2 text-gray-900 focus:ring-2 focus:ring-emerald-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             />
           </div>
 
@@ -77,7 +77,7 @@ const Login: React.FC = () => {
             type="submit"
             disabled={loading}
             className={`w-full rounded-lg py-2 font-semibold text-white transition duration-300 ${
-              loading ? "bg-gray-500" : "bg-green-500 hover:bg-green-600"
+              loading ? "bg-gray-500" : "bg-emerald-500 hover:bg-emerald-600"
             }`}
           >
             {loading ? "Connexion en cours..." : "Se connecter"}
@@ -88,7 +88,7 @@ const Login: React.FC = () => {
           Pas encore inscrit ?{" "}
           <Link
             to="/register"
-            className="font-semibold text-green-700 hover:underline dark:text-green-400"
+            className="font-semibold text-emerald-700 hover:underline dark:text-emerald-400"
           >
             Inscription
           </Link>

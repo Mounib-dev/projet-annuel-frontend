@@ -22,6 +22,7 @@ import {
 
 import DialogModal from "../utils/DialogModal";
 import CategoryForm from "../category/CategoryForm";
+import api from "../../api";
 
 export type TransactionData = {
   transactionType: string;
@@ -32,14 +33,14 @@ export type TransactionData = {
   date: string;
 };
 
-// Type strict pour une catégorie locale
+// Type for local Category
 type Category = {
   id: string;
   label: string;
   icon: React.ReactNode;
 };
 
-// Type strict pour une catégorie venant de l'API
+// Type for category from API
 type CategoryFromApi = {
   _id: string;
   title: string;
@@ -141,7 +142,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ onFormSubmit }) => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await axios.get<CategoryFromApi[]>(
+        const response = await api.get<CategoryFromApi[]>(
           `${import.meta.env.VITE_API_BASE_URL}/category`,
         );
 
@@ -162,7 +163,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ onFormSubmit }) => {
   }, []);
 
   return (
-    <div className="mx-auto w-full max-w-lg rounded-xl bg-white p-8 shadow-md dark:bg-gray-800 dark:text-white">
+    <>
       <DialogModal
         isOpen={isModalOpen}
         onClose={() => setModalOpen(false)}
@@ -189,7 +190,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ onFormSubmit }) => {
               className="peer hidden"
               onChange={() => handleTransactionChange("expense")}
             />
-            <div className="rounded-full border-2 border-green-500 px-3 py-2 text-green-400 transition peer-checked:border-none peer-checked:bg-green-700 peer-checked:text-white hover:text-zinc-200">
+            <div className="rounded-full border-2 border-emerald-500 px-3 py-2 text-emerald-400 transition peer-checked:border-none peer-checked:bg-emerald-700 peer-checked:text-white hover:text-zinc-200">
               Dépense
             </div>
           </label>
@@ -202,7 +203,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ onFormSubmit }) => {
               className="peer hidden"
               onChange={() => handleTransactionChange("income")}
             />
-            <div className="rounded-full border-2 border-green-500 px-3 py-2 text-green-400 transition peer-checked:border-none peer-checked:bg-green-700 peer-checked:text-white hover:text-zinc-200">
+            <div className="rounded-full border-2 border-emerald-500 px-3 py-2 text-emerald-400 transition peer-checked:border-none peer-checked:bg-emerald-700 peer-checked:text-white hover:text-zinc-200">
               Revenu
             </div>
           </label>
@@ -227,7 +228,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ onFormSubmit }) => {
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               Catégorie
             </label>
-            <div className="mt-3 flex flex-wrap items-center gap-3">
+            <div className="mt-3 flex flex-wrap items-center gap-3 dark:text-slate-100">
               {categories.map((cat) => (
                 <label htmlFor={cat.id} key={cat.id}>
                   <input
@@ -240,16 +241,16 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ onFormSubmit }) => {
                     className="peer hidden"
                     onChange={() => handleCategoryChange(cat.id)}
                   />
-                  <div className="cursor-pointer transition-colors peer-checked:text-green-500">
+                  <div className="cursor-pointer transition-colors peer-checked:text-emerald-500">
                     {cat.icon}
                   </div>
                 </label>
               ))}
 
               {/* Ajouter nouvelle catégorie */}
-              <div className="mx-2 h-6 w-0.5 bg-green-500"></div>
+              <div className="mx-2 h-6 w-0.5 bg-emerald-500"></div>
               <div
-                className="flex cursor-pointer items-center gap-1 text-green-500"
+                className="flex cursor-pointer items-center gap-1 text-emerald-500"
                 onClick={() => setModalOpen(true)}
               >
                 <Plus className="rounded-full border" />
@@ -261,7 +262,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ onFormSubmit }) => {
                 {errors.category.message}
               </p>
             )}
-            <p className="mt-2 text-xl text-green-500">
+            <p className="mt-2 text-xl text-emerald-500">
               {categories.find((cat) => cat.id === selectedCategory)?.label}
             </p>
           </div>
@@ -285,7 +286,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ onFormSubmit }) => {
                 message: "Le montant doit être supérieur à 0",
               },
             })}
-            className="mt-2 w-full rounded-md border bg-gray-50 px-4 py-2 focus:ring-2 focus:ring-green-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+            className="mt-2 w-full rounded-md border bg-gray-50 px-4 py-2 focus:ring-2 focus:ring-emerald-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
           />
           {errors.amount && (
             <p className="mt-1 text-sm text-red-500">{errors.amount.message}</p>
@@ -306,7 +307,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ onFormSubmit }) => {
               required: "Ce champ est obligatoire",
             })}
             rows={3}
-            className="mt-2 w-full rounded-md border bg-gray-50 px-4 py-2 focus:ring-2 focus:ring-green-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+            className="mt-2 w-full rounded-md border bg-gray-50 px-4 py-2 focus:ring-2 focus:ring-emerald-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
           />
           {errors.description && (
             <p className="mt-1 text-sm text-red-500">
@@ -327,7 +328,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ onFormSubmit }) => {
             type="date"
             id="date"
             {...register("date", { required: "Ce champ est obligatoire" })}
-            className="mt-2 w-full rounded-md border bg-gray-50 px-4 py-2 focus:ring-2 focus:ring-green-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+            className="mt-2 w-full rounded-md border bg-gray-50 px-4 py-2 focus:ring-2 focus:ring-emerald-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
           />
           {errors.date && (
             <p className="mt-1 text-sm text-red-500">{errors.date.message}</p>
@@ -337,12 +338,12 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ onFormSubmit }) => {
         {/* Bouton Submit */}
         <button
           type="submit"
-          className="w-full rounded-md bg-green-600 px-4 py-2 text-white hover:bg-green-700 focus:ring-2 focus:ring-green-400 focus:outline-none dark:bg-green-500 dark:hover:bg-green-600"
+          className="w-full rounded-md bg-emerald-600 px-4 py-2 text-white hover:bg-emerald-700 focus:ring-2 focus:ring-emerald-400 focus:outline-none dark:bg-emerald-500 dark:hover:bg-emerald-600"
         >
           Enregistrer
         </button>
       </form>
-    </div>
+    </>
   );
 };
 

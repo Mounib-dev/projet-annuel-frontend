@@ -126,7 +126,7 @@ export default function GoalsList({
 
             <div className="flex items-center justify-between">
               <div className="flex flex-col items-center">
-                <div className="flex h-20 w-20 items-center justify-center rounded-full border-4 border-green-500 text-green-600 dark:border-green-400 dark:text-green-300">
+                <div className="flex h-20 w-20 items-center justify-center rounded-full border-4 border-emerald-500 text-emerald-600 dark:border-emerald-400 dark:text-emerald-300">
                   <span className="text-lg font-bold">
                     {goal.targetAmount}€
                   </span>
@@ -186,17 +186,22 @@ export default function GoalsList({
           <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-lg dark:bg-gray-800 dark:text-white">
             <h2 className="mb-4 text-lg font-bold">Modifier l'objectif</h2>
             {successMessage && (
-              <div className="mb-4 rounded-md bg-green-100 p-2 text-sm text-green-700 dark:bg-green-800 dark:text-green-200">
+              <div className="mb-4 rounded-md bg-emerald-100 p-2 text-sm text-emerald-700 dark:bg-emerald-800 dark:text-emerald-200">
                 {successMessage}
               </div>
             )}
 
             <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
               <div>
-                <label htmlFor="description-input" className="block text-sm font-medium">Description</label>
+                <label
+                  htmlFor="description-input"
+                  className="block text-sm font-medium"
+                >
+                  Description
+                </label>
                 <input
                   type="text"
-                   id="description-input"
+                  id="description-input"
                   className="mt-1 w-full rounded-md border border-gray-300 p-2 dark:border-gray-700 dark:bg-gray-700"
                   value={editData.description}
                   onChange={(e) =>
@@ -206,7 +211,10 @@ export default function GoalsList({
               </div>
 
               <div>
-                <label htmlFor="amount-input" className="block text-sm font-medium">
+                <label
+                  htmlFor="amount-input"
+                  className="block text-sm font-medium"
+                >
                   Montant cible (€)
                 </label>
                 <input
@@ -224,7 +232,12 @@ export default function GoalsList({
               </div>
 
               <div>
-                <label htmlFor="date-input" className="block text-sm font-medium">Date cible</label>
+                <label
+                  htmlFor="date-input"
+                  className="block text-sm font-medium"
+                >
+                  Date cible
+                </label>
                 <input
                   type="date"
                   id="date-input"
@@ -246,14 +259,14 @@ export default function GoalsList({
 
                 <button
                   onClick={handleUpdate}
-                  className="rounded-md bg-green-600 px-4 py-2 text-sm text-white hover:bg-green-700"
+                  className="rounded-md bg-emerald-600 px-4 py-2 text-sm text-white hover:bg-emerald-700"
                 >
                   Modifier
                 </button>
 
                 <button
                   onClick={handleDelete}
-                  className="flex items-center gap-1 rounded-md bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700"
+                  className="flex items-center gap-2 rounded-md bg-red-200 px-4 py-2 text-sm text-red-800 ring-1 shadow-sm ring-red-300 transition ring-inset hover:bg-red-300 focus:ring-2 focus:ring-red-400 focus:outline-none dark:bg-red-900/40 dark:text-red-300 dark:ring-red-700 dark:hover:bg-red-900/60 dark:focus:ring-red-600"
                 >
                   <Trash2 size={16} />
                   Supprimer

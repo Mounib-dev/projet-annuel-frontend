@@ -13,7 +13,9 @@ interface AuthContextType {
   logout: () => void;
 }
 
-export const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export const AuthContext = createContext<AuthContextType | undefined>(
+  undefined,
+);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
@@ -73,7 +75,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         `${import.meta.env.VITE_API_BASE_URL}/auth/login`,
         credentials,
       );
-      console.log(response);
 
       if (response.status === 201 && response.data.token) {
         localStorage.setItem("token", response.data.token);

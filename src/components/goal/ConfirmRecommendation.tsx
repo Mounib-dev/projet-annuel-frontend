@@ -48,7 +48,7 @@ export default function ConfirmRecommendation({
           <h2 className="mb-4 text-lg font-bold">Confirmer la génération</h2>
 
           {successMessage && (
-            <div className="mb-4 rounded-md bg-green-100 p-3 text-sm text-green-700 dark:bg-green-800 dark:text-green-200">
+            <div className="mb-4 rounded-md bg-emerald-100 p-3 text-sm text-emerald-700 dark:bg-emerald-800 dark:text-emerald-200">
               <div className="flex items-center gap-2">
                 <ClipboardCheck className="h-4 w-4" />
                 {successMessage}
@@ -74,7 +74,7 @@ export default function ConfirmRecommendation({
             <button
               onClick={handleConfirm}
               disabled={isLoading}
-              className="flex items-center gap-2 rounded-md bg-green-600 px-4 py-2 text-white hover:bg-green-700 focus:ring-2 focus:ring-green-400 focus:outline-none dark:bg-green-500 dark:hover:bg-green-600"
+              className="flex items-center gap-2 rounded-md bg-emerald-600 px-4 py-2 text-white hover:bg-emerald-700 focus:ring-2 focus:ring-emerald-400 focus:outline-none dark:bg-emerald-500 dark:hover:bg-emerald-600"
             >
               {isLoading ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
