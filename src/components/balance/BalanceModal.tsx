@@ -56,7 +56,7 @@ const BalanceModal: React.FC<BalanceModalProps> = ({ open, onSave }) => {
         {error && <p className="mt-2 text-sm text-red-500">{error}</p>}
         <div className="mt-4 flex justify-end gap-2">
           <button
-            className="rounded-lg bg-green-600 px-4 py-2 text-white hover:bg-green-700 disabled:bg-gray-400 dark:bg-green-500 dark:hover:bg-green-600"
+            className="rounded-lg bg-emerald-600 px-4 py-2 text-white hover:bg-emerald-700 disabled:bg-gray-400 dark:bg-emerald-500 dark:hover:bg-emerald-600"
             onClick={handleSave}
             disabled={loading}
           >
